@@ -111,17 +111,3 @@ export async function processMessage(telephone, message) {
   await saveTransaction(user.id, extracted);
   return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} GNF${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`;
 }
-
-// Test local
-const telephone = "+224612345678";
-const messages = [
-  "Vente 500000 GNF riz",
-  "Dépense 100000 GNF transport",
-  "Crédit Mamadou 300000 GNF",
-  "bilan du jour",
-];
-
-for (const msg of messages) {
-  const reponse = await processMessage(telephone, msg);
-  console.log(`\n📱 "${msg}"\n→ ${reponse}`);
-}
