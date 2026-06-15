@@ -37,9 +37,9 @@ async function getOrCreateUser(telephone) {
       .insert({ telephone })
       .select()
       .single();
-    return newUser;
+    return { user: newUser, isNew: true };
   }
-  return data;
+  return { user: data, isNew: false };
 }
 
 async function extractTransaction(message) {
@@ -90,7 +90,27 @@ async function getBilan(userId, periode) {
 }
 
 export async function processMessage(telephone, message) {
-  const user = await getOrCreateUser(telephone);
+  const { user, isNew } = await getOrCreateUser(telephone);
+
+if (isNew) {
+  return `👋 Bienvenue sur Comptable WA !
+
+Je suis ton assistant comptable. Voici ce que tu peux faire :
+
+📦 *Enregistrer une vente*
+→ "Vente 500000 GNF riz"
+
+💸 *Enregistrer une dépense*
+→ "Dépense 100000 GNF transport"
+
+📋 *Enregistrer un crédit client*
+→ "Crédit Mamadou 300000 GNF"
+
+📊 *Voir ton bilan*
+→ "Bilan du jour" ou "Bilan du mois"
+
+Envoie ton premier message pour commencer !`;
+}
   const extracted = await extractTransaction(message);
 
   if (extracted.type === "bilan") {
