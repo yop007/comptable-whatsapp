@@ -12,6 +12,10 @@ Règles importantes :
 - "il a payé", "elle a payé", "a remboursé", "a payé" = remboursement
 - "combien X me doit", "qu'est ce que X me doit" = bilan avec client renseigné
 - Si le type est inconnu mais qu'il y a un montant, essaie de déduire le contexte
+- "quel est le bilan", "montre moi le bilan", "voir le bilan", "mon bilan" = bilan
+- "combien X me doit", "qu'est ce que X me doit", "solde de X" = bilan avec client renseigné
+- "bilan du jour", "bilan journalier", "bilan d'aujourd'hui" = bilan, periode: jour
+- "bilan du mois", "bilan mensuel" = bilan, periode: mois
 
 Retourne ce JSON :
 {
