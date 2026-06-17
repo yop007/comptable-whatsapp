@@ -89,8 +89,14 @@ async function getBilan(userId, periode) {
   const ventes = data.filter(t => t.type === "vente").reduce((s, t) => s + t.montant, 0);
   const depenses = data.filter(t => t.type === "depense").reduce((s, t) => s + t.montant, 0);
   const credits = data.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
+  const remboursements = data.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
 
-  return { ventes, depenses, benefice: ventes - depenses, credits };
+  return { 
+    ventes, 
+    depenses, 
+    benefice: ventes - depenses, 
+    credits: credits - remboursements 
+  };
 }
 
 export async function processMessage(telephone, message) {
