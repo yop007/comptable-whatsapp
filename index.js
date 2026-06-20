@@ -116,7 +116,7 @@ export async function processMessage(telephone, message) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
 if (isNew) {
-  return `👋 Bienvenue sur Comptable WA !
+  return `👋 Bienvenue sur Bilan WA !
 
 Je suis ton assistant comptable. Voici ce que tu peux faire :
 
