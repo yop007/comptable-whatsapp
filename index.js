@@ -99,6 +99,19 @@ async function getBilan(userId, periode) {
   };
 }
 
+async function getSoldeClient(userId, client) {
+  const { data } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("utilisateur_id", userId)
+    .ilike("client", client);
+
+  const credits = data.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
+  const remboursements = data.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
+
+  return credits - remboursements;
+}
+
 export async function processMessage(telephone, message) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
@@ -123,14 +136,20 @@ Envoie ton premier message pour commencer !`;
 }
   const extracted = await extractTransaction(message);
 
-  if (extracted.type === "bilan") {
-    const bilan = await getBilan(user.id, extracted.periode || "jour");
-    return `📊 Bilan ${extracted.periode === "mois" ? "du mois" : "du jour"} :
+ if (extracted.type === "bilan") {
+  if (extracted.client) {
+    const solde = await getSoldeClient(user.id, extracted.client);
+    return `📊 Solde de ${extracted.client} :
+${solde > 0 ? `Doit encore : ${solde.toLocaleString()} GNF` : "Aucune dette en cours."}`;
+  }
+
+  const bilan = await getBilan(user.id, extracted.periode || "jour");
+  return `📊 Bilan ${extracted.periode === "mois" ? "du mois" : "du jour"} :
 ✅ Ventes : ${bilan.ventes.toLocaleString()} GNF
 💸 Dépenses : ${bilan.depenses.toLocaleString()} GNF
 💰 Bénéfice : ${bilan.benefice.toLocaleString()} GNF
 📋 Crédits accordés : ${bilan.credits.toLocaleString()} GNF`;
-  }
+}
 
   if (extracted.type === "inconnu") {
     return "Je n'ai pas compris. Exemples :\n- Vente 500000 GNF riz\n- Dépense 100000 GNF transport\n- Crédit Mamadou 300000 GNF";
