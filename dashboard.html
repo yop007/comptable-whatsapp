@@ -70,6 +70,8 @@
         <option value="remboursement">Remboursement</option>
       </select>
       <button class="reset" onclick="resetFilters()">Réinitialiser</button>
+      <button onclick="exportCSV()">⬇ Export CSV</button>
+      <button onclick="exportTXT()">⬇ Export TXT</button>
     </div>
     <div class="count" id="result-count"></div>
     <table>
@@ -145,6 +147,68 @@
       applyFilters();
     }
 
+    function exportCSV() {
+  const filtered = getFiltered();
+  const header = "Date,Téléphone,Type,Montant,Description,Client";
+  const rows = filtered.map(t => [
+    new Date(t.created_at).toLocaleString('fr-FR'),
+    t.telephone || '',
+    t.type,
+    t.montant || '',
+    t.description || '',
+    t.client || ''
+  ].join(','));
+  const csv = [header, ...rows].join('\n');
+  download('transactions.csv', csv, 'text/csv');
+}
+
+function exportTXT() {
+  const filtered = getFiltered();
+  const lines = filtered.map(t =>
+    `${new Date(t.created_at).toLocaleString('fr-FR')} | ${t.type.toUpperCase()} | ${t.montant ? t.montant.toLocaleString() + ' GNF' : '—'} | ${t.description || '—'} | ${t.client || '—'}`
+  );
+  const total_ventes = filtered.filter(t => t.type === 'vente').reduce((s, t) => s + (t.montant || 0), 0);
+  const total_depenses = filtered.filter(t => t.type === 'depense').reduce((s, t) => s + (t.montant || 0), 0);
+  const total_credits = filtered.filter(t => t.type === 'credit').reduce((s, t) => s + (t.montant || 0), 0);
+
+  const txt = [
+    '=== BILAN WA — EXPORT TRANSACTIONS ===',
+    `Date export : ${new Date().toLocaleString('fr-FR')}`,
+    `Nombre de transactions : ${filtered.length}`,
+    '',
+    '--- RÉSUMÉ ---',
+    `Ventes totales    : ${total_ventes.toLocaleString()} GNF`,
+    `Dépenses totales  : ${total_depenses.toLocaleString()} GNF`,
+    `Bénéfice          : ${(total_ventes - total_depenses).toLocaleString()} GNF`,
+    `Crédits accordés  : ${total_credits.toLocaleString()} GNF`,
+    '',
+    '--- DÉTAIL ---',
+    ...lines
+  ].join('\n');
+  download('transactions.txt', txt, 'text/plain');
+}
+
+function getFiltered() {
+  const telephone = document.getElementById('filter-telephone').value.toLowerCase();
+  const client = document.getElementById('filter-client').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  return allTransactions.filter(t => {
+    const matchTel = !telephone || (t.telephone || '').toLowerCase().includes(telephone);
+    const matchClient = !client || (t.client || '').toLowerCase().includes(client);
+    const matchType = !type || t.type === type;
+    return matchTel && matchClient && matchType;
+  });
+}
+
+function download(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
     loadData();
     setInterval(loadData, 30000);
   </script>
