@@ -16,6 +16,11 @@ Règles importantes :
 - "combien X me doit", "qu'est ce que X me doit", "solde de X" = bilan avec client renseigné
 - "bilan du jour", "bilan journalier", "bilan d'aujourd'hui" = bilan, periode: jour
 - "bilan du mois", "bilan mensuel" = bilan, periode: mois
+- "vt", "vente" = vente
+- "dp", "dep", "dépense" = depense
+- "cr", "crédit" = credit
+- "rb", "remb" = remboursement
+- "bl", "bilan" = bilan
 
 Retourne ce JSON :
 {
