@@ -187,10 +187,6 @@ if (extracted.type === "credits_liste") {
   if (extracted.type === "inconnu") {
     return "Je n'ai pas compris. Exemples :\n- Vente 500000 GNF riz\n- Dépense 100000 GNF transport\n- Crédit Mamadou 300000 GNF";
   }
-
-  await saveTransaction(user.id, extracted);
-  return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} GNF${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`;
-}
 if (extracted.type === "aide") {
   return `📖 Commandes disponibles :
 
@@ -215,4 +211,7 @@ if (extracted.type === "aide") {
 
 📌 *Solde d'un client*
 → "Combien Mamadou me doit ?"`;
+}
+  await saveTransaction(user.id, extracted);
+  return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} GNF${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`;
 }
