@@ -141,5 +141,54 @@ cron.schedule("0 8 * * *", async () => {
     }
   }
 });
+// Bilan hebdomadaire — chaque lundi à 7h
+cron.schedule("0 7 * * 1", async () => {
+  console.log("📊 Envoi bilans hebdomadaires...");
+
+  const { data: utilisateurs } = await supabase
+    .from("utilisateurs")
+    .select("*");
+
+  const maintenant = new Date();
+  const debutSemaine = new Date();
+  debutSemaine.setDate(maintenant.getDate() - 7);
+  debutSemaine.setHours(0, 0, 0, 0);
+
+  for (const user of utilisateurs) {
+    const { data: transactions } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("utilisateur_id", user.id)
+      .gte("created_at", debutSemaine.toISOString());
+
+    if (!transactions || transactions.length === 0) continue;
+
+    const ventes = transactions.filter(t => t.type === "vente").reduce((s, t) => s + t.montant, 0);
+    const depenses = transactions.filter(t => t.type === "depense").reduce((s, t) => s + t.montant, 0);
+    const credits = transactions.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
+    const remboursements = transactions.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
+
+    const message = `📊 Bilan de la semaine :
+
+✅ Ventes : ${ventes.toLocaleString()} GNF
+💸 Dépenses : ${depenses.toLocaleString()} GNF
+💰 Bénéfice : ${(ventes - depenses).toLocaleString()} GNF
+📋 Crédits accordés : ${credits.toLocaleString()} GNF
+✅ Remboursements reçus : ${remboursements.toLocaleString()} GNF
+
+Bonne semaine ! 💪`;
+
+    try {
+      await twilioClient.messages.create({
+        from: "whatsapp:+14155238886",
+        to: user.telephone,
+        body: message,
+      });
+      console.log(`✅ Bilan hebdo envoyé à ${user.telephone}`);
+    } catch (err) {
+      console.error(`❌ Erreur bilan hebdo ${user.telephone}:`, err.message);
+    }
+  }
+});
 
 app.listen(3000, () => console.log("✅ Serveur démarré sur port 3000"));
