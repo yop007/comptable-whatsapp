@@ -13,8 +13,34 @@ app.use(cors());
 app.use(express.json());
 
 // Dashboard admin
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanwa2026";
+
 app.get("/admin", (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Basic ")) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
+    return res.status(401).send("Accès non autorisé");
+  }
+  const credentials = Buffer.from(auth.split(" ")[1], "base64").toString();
+  const [, password] = credentials.split(":");
+  if (password !== ADMIN_PASSWORD) {
+    res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
+    return res.status(401).send("Mot de passe incorrect");
+  }
   res.sendFile(new URL("./dashboard.html", import.meta.url).pathname);
+});
+
+app.get("/admin/data", (req, res, next) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith("Basic ")) {
+    return res.status(401).json({ error: "Non autorisé" });
+  }
+  const credentials = Buffer.from(auth.split(" ")[1], "base64").toString();
+  const [, password] = credentials.split(":");
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Mot de passe incorrect" });
+  }
+  next();
 });
 
 // Landing page
