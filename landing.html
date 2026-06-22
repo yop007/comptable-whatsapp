@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bilan WA — Assistant Comptable WhatsApp</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; color: #333; }
+
+    /* NAV */
+    nav { background: #085041; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { color: white; font-size: 1.2rem; font-weight: 600; }
+    nav .lang { display: flex; gap: 8px; }
+    nav .lang button { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; }
+    nav .lang button.active { background: white; color: #085041; font-weight: 600; }
+
+    /* HERO */
+    .hero { background: linear-gradient(135deg, #085041 0%, #0F6E56 100%); color: white; padding: 5rem 2rem; text-align: center; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; line-height: 1.2; }
+    .hero p { font-size: 1.1rem; opacity: 0.9; max-width: 600px; margin: 0 auto 2rem; }
+    .btn-wa { display: inline-flex; align-items: center; gap: 10px; background: #25D366; color: white; padding: 14px 28px; border-radius: 50px; font-size: 1rem; font-weight: 600; text-decoration: none; transition: transform 0.2s; }
+    .btn-wa:hover { transform: scale(1.05); }
+    .btn-wa svg { width: 24px; height: 24px; fill: white; }
+
+    /* PRICING */
+    .pricing { padding: 4rem 2rem; background: #f9f9f7; text-align: center; }
+    .pricing h2 { font-size: 1.8rem; margin-bottom: 0.5rem; color: #085041; }
+    .pricing .sub { color: #888; margin-bottom: 2.5rem; }
+    .plans { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+    .plan { background: white; border-radius: 12px; padding: 2rem; width: 280px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border: 2px solid transparent; }
+    .plan.popular { border-color: #085041; position: relative; }
+    .plan.popular::before { content: attr(data-badge); position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #085041; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .plan h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .plan .price { font-size: 2rem; font-weight: 700; color: #085041; margin: 1rem 0; }
+    .plan .price span { font-size: 1rem; font-weight: 400; color: #888; }
+    .plan ul { list-style: none; text-align: left; margin-bottom: 1.5rem; }
+    .plan ul li { padding: 6px 0; font-size: 14px; color: #555; }
+    .plan ul li::before { content: "✓ "; color: #085041; font-weight: 600; }
+    .plan .btn-plan { display: block; text-align: center; background: #085041; color: white; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .plan.popular .btn-plan { background: #085041; }
+
+    /* FEATURES */
+    .features { padding: 4rem 2rem; max-width: 900px; margin: 0 auto; }
+    .features h2 { font-size: 1.8rem; text-align: center; margin-bottom: 2.5rem; color: #085041; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .feature { background: #f9f9f7; border-radius: 10px; padding: 1.5rem; }
+    .feature .icon { font-size: 2rem; margin-bottom: 0.8rem; }
+    .feature h3 { font-size: 1rem; margin-bottom: 0.5rem; color: #085041; }
+    .feature p { font-size: 13px; color: #666; line-height: 1.5; }
+
+    /* HOW IT WORKS */
+    .how { padding: 4rem 2rem; background: #f9f9f7; text-align: center; }
+    .how h2 { font-size: 1.8rem; margin-bottom: 2.5rem; color: #085041; }
+    .steps { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
+    .step { background: white; border-radius: 10px; padding: 1.5rem; width: 200px; }
+    .step .num { width: 36px; height: 36px; background: #085041; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 1rem; }
+    .step p { font-size: 13px; color: #555; line-height: 1.5; }
+
+    /* CTA */
+    .cta { background: #085041; color: white; padding: 4rem 2rem; text-align: center; }
+    .cta h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+    .cta p { opacity: 0.9; margin-bottom: 2rem; }
+
+    /* FOOTER */
+    footer { background: #333; color: #aaa; padding: 1.5rem 2rem; text-align: center; font-size: 13px; }
+
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.8rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Bilan WA</div>
+  <div class="lang">
+    <button class="active" onclick="setLang('fr')">FR</button>
+    <button onclick="setLang('en')">EN</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1 data-fr="Votre comptable WhatsApp" data-en="Your WhatsApp Accountant">Votre comptable WhatsApp</h1>
+  <p data-fr="Enregistrez vos ventes, dépenses et crédits clients directement via WhatsApp. Pas d'application à installer." data-en="Record your sales, expenses and customer credits directly via WhatsApp. No app to install.">Enregistrez vos ventes, dépenses et crédits clients directement via WhatsApp. Pas d'application à installer.</p>
+  <a href="https://wa.me/15344449308?text=Bonjour" class="btn-wa">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span data-fr="Démarrer gratuitement" data-en="Start for free">Démarrer gratuitement</span>
+  </a>
+</section>
+
+<section class="features">
+  <h2 data-fr="Tout ce dont vous avez besoin" data-en="Everything you need">Tout ce dont vous avez besoin</h2>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="icon">💰</div>
+      <h3 data-fr="Ventes & Dépenses" data-en="Sales & Expenses">Ventes & Dépenses</h3>
+      <p data-fr="Enregistrez chaque transaction en quelques secondes par message vocal ou texte." data-en="Record every transaction in seconds by voice or text message.">Enregistrez chaque transaction en quelques secondes par message vocal ou texte.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📋</div>
+      <h3 data-fr="Crédits clients" data-en="Customer credits">Crédits clients</h3>
+      <p data-fr="Suivez qui vous doit quoi. Rappels automatiques après 7 jours." data-en="Track who owes you what. Automatic reminders after 7 days.">Suivez qui vous doit quoi. Rappels automatiques après 7 jours.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📊</div>
+      <h3 data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</h3>
+      <p data-fr="Bilan du jour, de la semaine et du mois envoyé automatiquement sur WhatsApp." data-en="Daily, weekly and monthly reports sent automatically on WhatsApp.">Bilan du jour, de la semaine et du mois envoyé automatiquement sur WhatsApp.</p>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <h2 data-fr="Comment ça marche ?" data-en="How does it work?">Comment ça marche ?</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <p data-fr="Envoie un message WhatsApp à Bilan WA" data-en="Send a WhatsApp message to Bilan WA">Envoie un message WhatsApp à Bilan WA</p>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <p data-fr="L'assistant comprend et enregistre l'opération automatiquement" data-en="The assistant understands and records the operation automatically">L'assistant comprend et enregistre l'opération automatiquement</p>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <p data-fr="Tu reçois une confirmation immédiate et tes bilans en temps réel" data-en="You receive immediate confirmation and real-time reports">Tu reçois une confirmation immédiate et tes bilans en temps réel</p>
+    </div>
+  </div>
+</section>
+
+<section class="pricing">
+  <h2 data-fr="Tarifs simples" data-en="Simple pricing">Tarifs simples</h2>
+  <p class="sub" data-fr="Pas de surprise. Annulable à tout moment." data-en="No surprises. Cancel anytime.">Pas de surprise. Annulable à tout moment.</p>
+  <div class="plans">
+    <div class="plan">
+      <h3 data-fr="Gratuit" data-en="Free">Gratuit</h3>
+      <div class="price">0 <span>GNF</span></div>
+      <ul>
+        <li data-fr="50 transactions/mois" data-en="50 transactions/month">50 transactions/mois</li>
+        <li data-fr="Bilan du jour" data-en="Daily report">Bilan du jour</li>
+        <li data-fr="Crédits clients" data-en="Customer credits">Crédits clients</li>
+      </ul>
+      <a href="https://wa.me/15344449308?text=Bonjour" class="btn-plan" data-fr="Commencer" data-en="Get started">Commencer</a>
+    </div>
+    <div class="plan popular" data-badge="Populaire">
+      <h3 data-fr="Pro" data-en="Pro">Pro</h3>
+      <div class="price">30 000 <span>GNF/mois</span></div>
+      <ul>
+        <li data-fr="Transactions illimitées" data-en="Unlimited transactions">Transactions illimitées</li>
+        <li data-fr="Bilans hebdo & mensuel" data-en="Weekly & monthly reports">Bilans hebdo & mensuel</li>
+        <li data-fr="Rappels crédits automatiques" data-en="Automatic credit reminders">Rappels crédits automatiques</li>
+        <li data-fr="Support prioritaire" data-en="Priority support">Support prioritaire</li>
+      </ul>
+      <a href="https://wa.me/15344449308?text=Bonjour" class="btn-plan" data-fr="Commencer" data-en="Get started">Commencer</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2 data-fr="Prêt à mieux gérer votre boutique ?" data-en="Ready to better manage your shop?">Prêt à mieux gérer votre boutique ?</h2>
+  <p data-fr="Rejoignez les commerçants qui utilisent déjà Bilan WA." data-en="Join the merchants already using Bilan WA.">Rejoignez les commerçants qui utilisent déjà Bilan WA.</p>
+  <a href="https://wa.me/15344449308?text=Bonjour" class="btn-wa">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span data-fr="Démarrer sur WhatsApp" data-en="Start on WhatsApp">Démarrer sur WhatsApp</span>
+  </a>
+</section>
+
+<footer>
+  <p>© 2026 Bilan WA — Asili Sàrl · <span data-fr="Tous droits réservés" data-en="All rights reserved">Tous droits réservés</span></p>
+</footer>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+      el.textContent = el.getAttribute('data-' + lang);
+    });
+    document.querySelectorAll('.lang button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('.lang button[onclick="setLang(\'' + lang + '\')"]').classList.add('active');
+    if (lang === 'en') {
+      document.querySelector('.plan.popular').setAttribute('data-badge', 'Popular');
+    } else {
+      document.querySelector('.plan.popular').setAttribute('data-badge', 'Populaire');
+    }
+  }
+</script>
+
+</body>
+</html>

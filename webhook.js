@@ -17,6 +17,11 @@ app.get("/admin", (req, res) => {
   res.sendFile(new URL("./dashboard.html", import.meta.url).pathname);
 });
 
+// Landing page
+app.get("/", (req, res) => {
+  res.sendFile(new URL("./landing.html", import.meta.url).pathname);
+});
+
 app.get("/admin/data", async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
