@@ -15,6 +15,10 @@
     .stat-card .value { font-size: 24px; font-weight: 600; color: #085041; }
     .section { padding: 0 2rem 2rem; }
     .section h2 { font-size: 1rem; margin-bottom: 1rem; color: #555; }
+    .filters { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filters input, .filters select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; min-width: 180px; }
+    .filters button { padding: 8px 16px; background: #085041; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+    .filters button.reset { background: #eee; color: #555; }
     table { width: 100%; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-collapse: collapse; }
     th { text-align: left; padding: 10px 14px; font-size: 12px; color: #888; border-bottom: 1px solid #eee; }
     td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
@@ -24,6 +28,7 @@
     .badge.depense { background: #ffeee8; color: #c0392b; }
     .badge.credit { background: #fff8e1; color: #e67e22; }
     .badge.remboursement { background: #e8f4fd; color: #2980b9; }
+    .count { font-size: 12px; color: #888; margin-bottom: 8px; }
     .loading { text-align: center; padding: 2rem; color: #888; }
   </style>
 </head>
@@ -54,6 +59,19 @@
 
   <div class="section">
     <h2>Dernières transactions</h2>
+    <div class="filters">
+      <input type="text" id="filter-telephone" placeholder="🔍 Téléphone..." oninput="applyFilters()">
+      <input type="text" id="filter-client" placeholder="🔍 Client..." oninput="applyFilters()">
+      <select id="filter-type" onchange="applyFilters()">
+        <option value="">Tous les types</option>
+        <option value="vente">Vente</option>
+        <option value="depense">Dépense</option>
+        <option value="credit">Crédit</option>
+        <option value="remboursement">Remboursement</option>
+      </select>
+      <button class="reset" onclick="resetFilters()">Réinitialiser</button>
+    </div>
+    <div class="count" id="result-count"></div>
     <table>
       <thead>
         <tr>
@@ -72,6 +90,8 @@
   </div>
 
   <script>
+    let allTransactions = [];
+
     async function loadData() {
       const res = await fetch('/admin/data');
       const data = await res.json();
@@ -82,8 +102,31 @@
       document.getElementById('stat-credits').textContent = (data.stats.creditsEnCours || 0).toLocaleString() + ' GNF';
       document.getElementById('last-update').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
 
+      allTransactions = data.transactions;
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const telephone = document.getElementById('filter-telephone').value.toLowerCase();
+      const client = document.getElementById('filter-client').value.toLowerCase();
+      const type = document.getElementById('filter-type').value;
+
+      const filtered = allTransactions.filter(t => {
+        const matchTel = !telephone || (t.telephone || '').toLowerCase().includes(telephone);
+        const matchClient = !client || (t.client || '').toLowerCase().includes(client);
+        const matchType = !type || t.type === type;
+        return matchTel && matchClient && matchType;
+      });
+
+      document.getElementById('result-count').textContent = `${filtered.length} résultat(s)`;
+
       const tbody = document.getElementById('transactions-body');
-      tbody.innerHTML = data.transactions.map(t => `
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">Aucun résultat.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => `
         <tr>
           <td>${new Date(t.created_at).toLocaleString('fr-FR')}</td>
           <td>${t.telephone || '—'}</td>
@@ -93,6 +136,13 @@
           <td>${t.client || '—'}</td>
         </tr>
       `).join('');
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-telephone').value = '';
+      document.getElementById('filter-client').value = '';
+      document.getElementById('filter-type').value = '';
+      applyFilters();
     }
 
     loadData();
