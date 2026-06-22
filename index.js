@@ -32,7 +32,7 @@ Retourne ce JSON :
 {
   "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "inconnu",
   "montant": number | null,
-  "devise": "GNF" | null,
+  "devise": string | null,
   "description": string | null,
   "client": string | null,
   "periode": "jour" | "mois" | null
@@ -154,15 +154,16 @@ Envoie ton premier message pour commencer !`;
   if (extracted.client) {
     const solde = await getSoldeClient(user.id, extracted.client);
     return `📊 Solde de ${extracted.client} :
-${solde > 0 ? `Doit encore : ${solde.toLocaleString()} GNF` : "Aucune dette en cours."}`;
+${solde > 0 ? `Doit encore : ${solde.toLocaleString()} ${extracted.devise || ""}` : "Aucune dette en cours."}`;
   }
   
   const bilan = await getBilan(user.id, extracted.periode || "jour");
+  const devise = extracted.devise || "";
   return `📊 Bilan ${extracted.periode === "mois" ? "du mois" : "du jour"} :
-✅ Ventes : ${bilan.ventes.toLocaleString()} GNF
-💸 Dépenses : ${bilan.depenses.toLocaleString()} GNF
-💰 Bénéfice : ${bilan.benefice.toLocaleString()} GNF
-📋 Crédits accordés : ${bilan.credits.toLocaleString()} GNF`;
+✅ Ventes : ${bilan.ventes.toLocaleString()} ${devise}
+💸 Dépenses : ${bilan.depenses.toLocaleString()} ${devise}
+💰 Bénéfice : ${bilan.benefice.toLocaleString()} ${devise}
+📋 Crédits accordés : ${bilan.credits.toLocaleString()} ${devise}`;
 }
 if (extracted.type === "credits_liste") {
   const { data } = await supabase
@@ -207,7 +208,7 @@ if (extracted.type === "annuler") {
     pendingCancellations[user.telephone] = derniere.id;
 
     return `⚠️ Dernière opération enregistrée :
-${derniere.type.toUpperCase()} de ${derniere.montant?.toLocaleString()} GNF${derniere.description ? " - " + derniere.description : ""}${derniere.client ? " (client: " + derniere.client + ")" : ""}
+${derniere.type.toUpperCase()} de ${derniere.montant?.toLocaleString()}${derniere.description ? " - " + derniere.description : ""}${derniere.client ? " (client: " + derniere.client + ")" : ""}
 
 Confirmer la suppression ? Réponds *oui* pour supprimer ou *non* pour annuler.`;
   }
@@ -261,5 +262,5 @@ if (extracted.type === "aide") {
 → "Combien Mamadou me doit ?"`;
 }
   await saveTransaction(user.id, extracted);
-  return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} GNF${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`;
+  return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} ${extracted.devise || ""}${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`.trim();
 }
