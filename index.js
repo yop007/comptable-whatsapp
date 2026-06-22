@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const pendingCancellations = {};
+const pendingPins = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commerçants en Guinée.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -130,18 +131,46 @@ export async function processMessage(telephone, message) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
 if (isNew) {
+  pendingPins[telephone] = { step: "create" };
   return `👋 Bienvenue sur Bilan WA !
 
+Pour sécuriser ton compte, crée un code PIN à 4 chiffres.
+Ce code te permettra de récupérer ton compte si tu changes de numéro.
+
+Envoie ton PIN à 4 chiffres :`;
+}
+
+if (pendingPins[telephone]?.step === "create") {
+  if (!/^\d{4}$/.test(message.trim())) {
+    return "❌ PIN invalide. Envoie exactement 4 chiffres (ex: 1234)";
+  }
+  pendingPins[telephone] = { step: "confirm", pin: message.trim() };
+  return "✅ Confirme ton PIN en le saisissant à nouveau :";
+}
+
+if (pendingPins[telephone]?.step === "confirm") {
+  if (message.trim() !== pendingPins[telephone].pin) {
+    pendingPins[telephone] = { step: "create" };
+    return "❌ Les PIN ne correspondent pas. Recommence :";
+  }
+  await supabase
+    .from("utilisateurs")
+    .update({ pin: message.trim(), pin_confirme: true })
+    .eq("telephone", telephone);
+  delete pendingPins[telephone];
+  return `✅ PIN créé avec succès !
+
+👋 Bienvenue sur Bilan WA !
 Je suis ton assistant comptable. Voici ce que tu peux faire :
 
 📦 *Enregistrer une vente*
-→ "Vente 500000 GNF riz"
+→ "Vente 500000 riz"
 
 💸 *Enregistrer une dépense*
-→ "Dépense 100000 GNF transport"
+→ "Dépense 100000 transport"
 
 📋 *Enregistrer un crédit client*
-→ "Crédit Mamadou 300000 GNF"
+→ "Crédit Mamadou 300000"
 
 📊 *Voir ton bilan*
 → "Bilan du jour" ou "Bilan du mois"
