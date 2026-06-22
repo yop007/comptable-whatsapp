@@ -66,6 +66,9 @@ async function extractTransaction(message) {
 }
 
 async function saveTransaction(userId, extracted) {
+  if (extracted.client) {
+    extracted.client = extracted.client.charAt(0).toUpperCase() + extracted.client.slice(1).toLowerCase();
+  }
   const { data, error } = await supabase
     .from("transactions")
     .insert({
