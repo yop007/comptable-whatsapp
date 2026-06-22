@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const pendingCancellations = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commerçants en Guinée.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -23,10 +24,13 @@ Règles importantes :
 - "bl", "bilan" = bilan
 - "qui me doit", "liste des crédits", "mes crédits", "liste crédits", "lc" = credits_liste
 - "aide", "help", "commandes", "?" = aide
+- "annuler", "supprimer", "erreur", "annule" = annuler
+- "oui", "yes", "confirmer" = confirmer
+- "non", "no", "annuler" = refuser
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "inconnu",
   "montant": number | null,
   "devise": "GNF" | null,
   "description": string | null,
@@ -186,6 +190,47 @@ if (extracted.type === "credits_liste") {
 
   return `📋 Crédits en cours :\n${liste}`;
 }
+
+if (extracted.type === "annuler") {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("utilisateur_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      return "Aucune transaction à annuler.";
+    }
+
+    const derniere = data[0];
+    pendingCancellations[user.telephone] = derniere.id;
+
+    return `⚠️ Dernière opération enregistrée :
+${derniere.type.toUpperCase()} de ${derniere.montant?.toLocaleString()} GNF${derniere.description ? " - " + derniere.description : ""}${derniere.client ? " (client: " + derniere.client + ")" : ""}
+
+Confirmer la suppression ? Réponds *oui* pour supprimer ou *non* pour annuler.`;
+  }
+
+  if (extracted.type === "confirmer") {
+    const transactionId = pendingCancellations[user.telephone];
+    if (!transactionId) {
+      return "Aucune suppression en attente.";
+    }
+
+    await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", transactionId);
+
+    delete pendingCancellations[user.telephone];
+    return "✅ Transaction supprimée avec succès.";
+  }
+
+  if (extracted.type === "refuser") {
+    delete pendingCancellations[user.telephone];
+    return "❌ Suppression annulée. Transaction conservée.";
+  }
 
   if (extracted.type === "inconnu") {
     return "Je n'ai pas compris. Exemples :\n- Vente 500000 GNF riz\n- Dépense 100000 GNF transport\n- Crédit Mamadou 300000 GNF";
