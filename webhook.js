@@ -6,6 +6,55 @@ import { processMessage } from "./index.js";
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
+import cors from "cors";
+import { readFileSync } from "fs";
+
+app.use(cors());
+app.use(express.json());
+
+// Dashboard admin
+app.get("/admin", (req, res) => {
+  res.sendFile(new URL("./dashboard.html", import.meta.url).pathname);
+});
+
+app.get("/admin/data", async (req, res) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data: users } = await supabase.from("utilisateurs").select("*");
+  const { data: transactions } = await supabase
+    .from("transactions")
+    .select("*, utilisateurs(telephone)")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const transactionsToday = transactions.filter(t => new Date(t.created_at) >= today);
+  const ventesToday = transactionsToday
+    .filter(t => t.type === "vente")
+    .reduce((s, t) => s + t.montant, 0);
+
+  const creditsEnCours = transactions
+    .filter(t => t.type === "credit")
+    .reduce((s, t) => s + t.montant, 0) -
+    transactions
+    .filter(t => t.type === "remboursement")
+    .reduce((s, t) => s + t.montant, 0);
+
+  const formatted = transactions.map(t => ({
+    ...t,
+    telephone: t.utilisateurs?.telephone || "—"
+  }));
+
+  res.json({
+    stats: {
+      users: users.length,
+      transactionsToday: transactionsToday.length,
+      ventesToday,
+      creditsEnCours
+    },
+    transactions: formatted
+  });
+});
 
 const supabase = createClient(
   process.env.SUPABASE_URL,

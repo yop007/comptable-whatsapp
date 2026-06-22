@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bilan WA — Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #333; }
+    header { background: #085041; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { font-size: 1.2rem; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding: 1.5rem 2rem; }
+    .stat-card { background: white; border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .stat-card .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+    .stat-card .value { font-size: 24px; font-weight: 600; color: #085041; }
+    .section { padding: 0 2rem 2rem; }
+    .section h2 { font-size: 1rem; margin-bottom: 1rem; color: #555; }
+    table { width: 100%; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: 12px; color: #888; border-bottom: 1px solid #eee; }
+    td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+    tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .badge.vente { background: #e1f5ee; color: #085041; }
+    .badge.depense { background: #ffeee8; color: #c0392b; }
+    .badge.credit { background: #fff8e1; color: #e67e22; }
+    .badge.remboursement { background: #e8f4fd; color: #2980b9; }
+    .loading { text-align: center; padding: 2rem; color: #888; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Bilan WA — Dashboard Admin</h1>
+    <span id="last-update"></span>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Utilisateurs</div>
+      <div class="value" id="stat-users">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Transactions aujourd'hui</div>
+      <div class="value" id="stat-transactions">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Ventes aujourd'hui</div>
+      <div class="value" id="stat-ventes">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Crédits en cours</div>
+      <div class="value" id="stat-credits">—</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Dernières transactions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Téléphone</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Description</th>
+          <th>Client</th>
+        </tr>
+      </thead>
+      <tbody id="transactions-body">
+        <tr><td colspan="6" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadData() {
+      const res = await fetch('/admin/data');
+      const data = await res.json();
+
+      document.getElementById('stat-users').textContent = data.stats.users;
+      document.getElementById('stat-transactions').textContent = data.stats.transactionsToday;
+      document.getElementById('stat-ventes').textContent = (data.stats.ventesToday || 0).toLocaleString() + ' GNF';
+      document.getElementById('stat-credits').textContent = (data.stats.creditsEnCours || 0).toLocaleString() + ' GNF';
+      document.getElementById('last-update').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
+
+      const tbody = document.getElementById('transactions-body');
+      tbody.innerHTML = data.transactions.map(t => `
+        <tr>
+          <td>${new Date(t.created_at).toLocaleString('fr-FR')}</td>
+          <td>${t.telephone || '—'}</td>
+          <td><span class="badge ${t.type}">${t.type}</span></td>
+          <td>${t.montant ? t.montant.toLocaleString() + ' GNF' : '—'}</td>
+          <td>${t.description || '—'}</td>
+          <td>${t.client || '—'}</td>
+        </tr>
+      `).join('');
+    }
+
+    loadData();
+    setInterval(loadData, 30000);
+  </script>
+</body>
+</html>
