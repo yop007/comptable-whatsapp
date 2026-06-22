@@ -21,10 +21,12 @@ Règles importantes :
 - "cr", "crédit" = credit
 - "rb", "remb" = remboursement
 - "bl", "bilan" = bilan
+- "qui me doit", "liste des crédits", "mes crédits", "liste crédits", "lc" = credits_liste
+- "aide", "help", "commandes", "?" = aide
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "inconnu",
   "montant": number | null,
   "devise": "GNF" | null,
   "description": string | null,
@@ -147,13 +149,39 @@ Envoie ton premier message pour commencer !`;
     return `📊 Solde de ${extracted.client} :
 ${solde > 0 ? `Doit encore : ${solde.toLocaleString()} GNF` : "Aucune dette en cours."}`;
   }
-
+  
   const bilan = await getBilan(user.id, extracted.periode || "jour");
   return `📊 Bilan ${extracted.periode === "mois" ? "du mois" : "du jour"} :
 ✅ Ventes : ${bilan.ventes.toLocaleString()} GNF
 💸 Dépenses : ${bilan.depenses.toLocaleString()} GNF
 💰 Bénéfice : ${bilan.benefice.toLocaleString()} GNF
 📋 Crédits accordés : ${bilan.credits.toLocaleString()} GNF`;
+}
+if (extracted.type === "credits_liste") {
+  const { data } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("utilisateur_id", user.id)
+    .in("type", ["credit", "remboursement"]);
+
+  const soldes = {};
+  for (const t of data) {
+    if (!soldes[t.client]) soldes[t.client] = 0;
+    if (t.type === "credit") soldes[t.client] += t.montant;
+    if (t.type === "remboursement") soldes[t.client] -= t.montant;
+  }
+
+  const debiteurs = Object.entries(soldes)
+    .filter(([_, montant]) => montant > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (debiteurs.length === 0) return "✅ Aucun crédit en cours.";
+
+  const liste = debiteurs
+    .map(([client, montant]) => `• ${client} : ${montant.toLocaleString()} GNF`)
+    .join("\n");
+
+  return `📋 Crédits en cours :\n${liste}`;
 }
 
   if (extracted.type === "inconnu") {
@@ -162,4 +190,29 @@ ${solde > 0 ? `Doit encore : ${solde.toLocaleString()} GNF` : "Aucune dette en c
 
   await saveTransaction(user.id, extracted);
   return `✅ Enregistré : ${extracted.type} de ${extracted.montant?.toLocaleString()} GNF${extracted.description ? " - " + extracted.description : ""}${extracted.client ? " (client: " + extracted.client + ")" : ""}`;
+}
+if (extracted.type === "aide") {
+  return `📖 Commandes disponibles :
+
+💰 *Ventes*
+→ "Vente 500000 GNF riz" ou "vt 500000 riz"
+
+💸 *Dépenses*
+→ "Dépense 100000 GNF transport" ou "dp 100000 transport"
+
+📋 *Crédits clients*
+→ "Crédit Mamadou 300000 GNF" ou "cr Mamadou 300000"
+
+✅ *Remboursements*
+→ "Mamadou a payé 150000" ou "rb Mamadou 150000"
+
+📊 *Bilan*
+→ "Bilan du jour" ou "bl jour"
+→ "Bilan du mois" ou "bl mois"
+
+👥 *Liste des crédits*
+→ "Qui me doit" ou "lc"
+
+📌 *Solde d'un client*
+→ "Combien Mamadou me doit ?"`;
 }
