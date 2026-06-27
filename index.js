@@ -82,11 +82,15 @@ async function getOrCreateUser(telephone) {
   return { user: data, isNew: false };
 }
 
-async function extractTransaction(message) {
+async function extractTransaction(message, mode) {
+  const modeInstruction = mode === "perso"
+    ? "L utilisateur est en MODE PERSONNEL. Les depenses ambigues comme taxi, courses, restaurant, transport sont des budget_depense avec la bonne categorie. Ne jamais retourner type depense simple en mode perso."
+    : "L utilisateur est en MODE BUSINESS. Les transactions sont professionnelles.";
+
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: SYSTEM_PROMPT + "\n\n" + modeInstruction },
       { role: "user", content: message },
     ],
     temperature: 0,
@@ -250,9 +254,43 @@ export async function processMessage(telephone, message) {
     }
   }
 
-  const extracted = await extractTransaction(message);
+  const extracted = await extractTransaction(message, user.mode_actif || "business");
 
   if (extracted.type === "bilan") {
+    if (user.mode_actif === "perso") {
+      const from = new Date();
+      if (extracted.periode === "mois") from.setDate(1);
+      from.setHours(0, 0, 0, 0);
+
+      const { data } = await supabase
+        .from("transactions")
+        .select("*")
+        .eq("utilisateur_id", user.id)
+        .gte("created_at", from.toISOString())
+        .not("categorie", "is", null);
+
+      const transactions = data || [];
+      if (transactions.length === 0) return "Aucune depense personnelle enregistree.";
+
+      const emojis = { loyer: "🏠", nourriture: "🛒", transport: "🚗", sante: "💊", factures: "💡", education: "🎓", vetements: "👕", loisirs: "🎉", autre: "📦" };
+      const parCategorie = {};
+      for (const t of transactions) {
+        const cat = t.categorie || "autre";
+        if (!parCategorie[cat]) parCategorie[cat] = 0;
+        parCategorie[cat] += t.montant;
+      }
+
+      const total = Object.values(parCategorie).reduce((s, v) => s + v, 0);
+      const lignes = Object.entries(parCategorie)
+        .sort((a, b) => b[1] - a[1])
+        .map(([cat, montant]) => (emojis[cat] || "📦") + " " + cat.charAt(0).toUpperCase() + cat.slice(1) + " : " + montant.toLocaleString())
+        .join("\n");
+
+      return "Bilan perso " + (extracted.periode === "mois" ? "du mois" : "du jour") + " :\n\n" +
+        lignes + "\n" +
+        "───────────────────\n" +
+        "Total depense : " + total.toLocaleString();
+    }
     if (extracted.client) {
       const solde = await getSoldeClient(user.id, extracted.client);
       return "Solde de " + extracted.client + " :\n" + (solde > 0 ? "Doit encore : " + solde.toLocaleString() + " " + (extracted.devise || "") : "Aucune dette en cours.");
@@ -377,7 +415,7 @@ export async function processMessage(telephone, message) {
       description: extracted.description || categorie,
       categorie: categorie
     });
-    return emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "");
+    return emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "") + "\nCategorie : " + categorie;
   }
 
   if (extracted.type === "inconnu") {
