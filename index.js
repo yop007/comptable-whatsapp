@@ -516,7 +516,8 @@ export async function processMessage(telephone, message) {
         "ecole 50000         = Education\n\n" +
         "CONSULTER :\n" +
         "bl            = Bilan du jour\n" +
-        "bl mois       = Bilan du mois\n\n" +
+        "bl mois       = Bilan du mois\n" +
+      "ht            = 5 dernieres transactions\n\n" +
         "AUTRES :\n" +
         "mode business = Passer en mode business\n" +
         "mon mode      = Voir le mode actif\n" +
