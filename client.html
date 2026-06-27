@@ -149,6 +149,23 @@
 
   <div class="section">
     <h2>Historique des transactions</h2>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
+      <input type="date" id="filtre-debut" onchange="filtrer()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+      <input type="date" id="filtre-fin" onchange="filtrer()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+      <select id="filtre-type" onchange="filtrer()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;">
+        <option value="">Tous les types</option>
+        <option value="vente">Vente</option>
+        <option value="depense">Depense</option>
+        <option value="credit">Credit</option>
+        <option value="remboursement">Remboursement</option>
+      </select>
+      <input type="text" id="filtre-client" oninput="filtrer()" placeholder="Rechercher client..." style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;min-width:160px;">
+      <button onclick="resetFiltres()" style="padding:8px 16px;background:#eee;color:#555;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Reinitialiser</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;">
+      <button onclick="exportCSV()" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export CSV</button>
+      <button onclick="exportTXT()" style="padding:8px 16px;background:#555;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export TXT</button>
+    </div>
     <table>
       <thead>
         <tr>
@@ -215,6 +232,8 @@
     await chargerDonnees();
   }
 
+  let allTransactions = [];
+
   async function chargerDonnees() {
     try {
       const res = await fetch('/client/data', {
@@ -227,24 +246,95 @@
       document.getElementById('stat-benefice').textContent = data.stats.benefice.toLocaleString();
       document.getElementById('stat-credits').textContent = data.stats.credits.toLocaleString();
 
-      const tbody = document.getElementById('transactions-tbody');
-      if (!data.transactions.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucune transaction</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = data.transactions.map(t => `
-        <tr>
-          <td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td>
-          <td><span class="badge ${t.type}">${t.type}</span></td>
-          <td>${t.montant.toLocaleString()}</td>
-          <td>${t.description || '—'}</td>
-          <td>${t.client || '—'}</td>
-        </tr>
-      `).join('');
+      allTransactions = data.transactions;
+      afficherTransactions(allTransactions);
     } catch (err) {
       console.error(err);
     }
+  }
+
+  function filtrer() {
+    const debut = document.getElementById('filtre-debut').value;
+    const fin = document.getElementById('filtre-fin').value;
+    const type = document.getElementById('filtre-type').value;
+    const client = document.getElementById('filtre-client').value.toLowerCase();
+
+    const filtered = allTransactions.filter(t => {
+      const date = new Date(t.created_at);
+      if (debut && date < new Date(debut)) return false;
+      if (fin && date > new Date(fin + 'T23:59:59')) return false;
+      if (type && t.type !== type) return false;
+      if (client && !(t.client || '').toLowerCase().includes(client) && !(t.description || '').toLowerCase().includes(client)) return false;
+      return true;
+    });
+
+    afficherTransactions(filtered);
+  }
+
+  function resetFiltres() {
+    document.getElementById('filtre-debut').value = '';
+    document.getElementById('filtre-fin').value = '';
+    document.getElementById('filtre-type').value = '';
+    document.getElementById('filtre-client').value = '';
+    afficherTransactions(allTransactions);
+  }
+
+  function afficherTransactions(liste) {
+    const tbody = document.getElementById('transactions-tbody');
+    if (!liste.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucune transaction</td></tr>';
+      return;
+    }
+    tbody.innerHTML = liste.map(t => `
+      <tr>
+        <td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><span class="badge ${t.type}">${t.type}</span></td>
+        <td>${t.montant.toLocaleString()}</td>
+        <td>${t.description || '—'}</td>
+        <td>${t.client || '—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  function exportCSV() {
+    if (!allTransactions.length) return alert('Aucune transaction a exporter.');
+    const header = 'Date,Type,Montant,Description,Client';
+    const rows = allTransactions.map(t => [
+      new Date(t.created_at).toLocaleDateString('fr-FR'),
+      t.type,
+      t.montant,
+      (t.description || '').replace(/,/g, ' '),
+      (t.client || '').replace(/,/g, ' ')
+    ].join(','));
+    const csv = [header, ...rows].join('\n');
+    telecharger(csv, 'bilan-pro-transactions.csv', 'text/csv');
+  }
+
+  function exportTXT() {
+    if (!allTransactions.length) return alert('Aucune transaction a exporter.');
+    const lignes = allTransactions.map(t =>
+      new Date(t.created_at).toLocaleDateString('fr-FR') +
+      ' | ' + t.type.toUpperCase().padEnd(14) +
+      ' | ' + String(t.montant).padStart(12) +
+      ' | ' + (t.description || '—').padEnd(20) +
+      ' | ' + (t.client || '—')
+    );
+    const txt = 'BILAN PRO — Export transactions\n' +
+      '='.repeat(70) + '\n' +
+      'Date       | Type           | Montant      | Description          | Client\n' +
+      '-'.repeat(70) + '\n' +
+      lignes.join('\n');
+    telecharger(txt, 'bilan-pro-transactions.txt', 'text/plain');
+  }
+
+  function telecharger(contenu, nom, type) {
+    const blob = new Blob([contenu], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nom;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   window.onload = () => {
