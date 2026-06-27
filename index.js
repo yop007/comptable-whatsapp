@@ -47,12 +47,13 @@ Regles importantes :
 - "habit", "vetements", "fringues", "chaussures" = budget_depense, categorie: vetements
 - "loisirs", "sortie", "cinema", "restaurant", "vacances" = budget_depense, categorie: loisirs
 
+- "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "budget", "definir budget", "mon budget", "fixer budget" = budget_definir
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -323,6 +324,27 @@ export async function processMessage(telephone, message) {
       "Credits accordes : " + bilan.credits.toLocaleString() + " " + devise;
   }
 
+  if (extracted.type === "historique") {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("utilisateur_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    if (!data || data.length === 0) return "Aucune transaction enregistree.";
+
+    const emojis = { vente: "✅", depense: "💸", credit: "📋", remboursement: "💰" };
+    const liste = data.map((t, i) =>
+      (emojis[t.type] || "•") + " " + t.type.toUpperCase() + " " + t.montant?.toLocaleString() +
+      (t.description ? " - " + t.description : "") +
+      (t.client ? " (" + t.client + ")" : "") +
+      " | " + new Date(t.created_at).toLocaleDateString("fr-FR")
+    ).join("\n");
+
+    return "5 dernieres transactions :\n\n" + liste;
+  }
+
   if (extracted.type === "credits_liste") {
     const { data, error } = await supabase
       .from("transactions")
@@ -511,6 +533,7 @@ export async function processMessage(telephone, message) {
       "bl            = Bilan du jour\n" +
       "bl mois       = Bilan du mois\n" +
       "lc            = Liste des credits\n" +
+      "ht            = 5 dernieres transactions\n" +
       "Combien X me doit ?\n\n" +
       "AUTRES :\n" +
       "mode perso    = Passer en mode personnel\n" +
