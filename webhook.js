@@ -15,6 +15,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
 
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY,
+  { realtime: { transport: ws } }
+);
+
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
 // Dashboard admin
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanwa2026";
 
@@ -89,17 +100,6 @@ app.get("/admin/data", async (req, res) => {
     transactions: formatted
   });
 });
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
-  { realtime: { transport: ws } }
-);
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
 
 app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
@@ -266,6 +266,52 @@ cron.schedule("0 7 1 * *", async () => {
 // Panel client
 app.get("/client", (req, res) => {
   res.sendFile(join(__dirname, "client.html"));
+});
+
+app.post("/client/login", async (req, res) => {
+  const { telephone, pin } = req.body;
+  if (!telephone || !pin) return res.status(400).json({ error: "Champs manquants" });
+
+  const { data: users } = await supabase
+    .from("utilisateurs")
+    .select("*")
+    .eq("pin", pin);
+
+  const user = (users || []).find(u =>
+    u.telephone === telephone ||
+    u.telephone === "whatsapp:" + telephone ||
+    u.telephone.replace("whatsapp:", "") === telephone
+  );
+
+  if (!user) return res.status(401).json({ error: "Numero ou PIN incorrect." });
+
+  res.json({ user: { id: user.id, telephone: user.telephone } });
+});
+
+app.get("/client/data", async (req, res) => {
+  const userId = req.headers.authorization?.replace("Bearer ", "");
+  if (!userId) return res.status(401).json({ error: "Non autorise" });
+
+  const debutMois = new Date();
+  debutMois.setDate(1);
+  debutMois.setHours(0, 0, 0, 0);
+
+  const { data: transactions } = await supabase
+    .from("transactions")
+    .select("*")
+    .eq("utilisateur_id", userId)
+    .order("created_at", { ascending: false });
+
+  const mois = (transactions || []).filter(t => new Date(t.created_at) >= debutMois);
+  const ventes = mois.filter(t => t.type === "vente").reduce((s, t) => s + t.montant, 0);
+  const depenses = mois.filter(t => t.type === "depense").reduce((s, t) => s + t.montant, 0);
+  const credits = (transactions || []).filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
+  const remboursements = (transactions || []).filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
+
+  res.json({
+    stats: { ventes, depenses, benefice: ventes - depenses, credits: credits - remboursements },
+    transactions: transactions || []
+  });
 });
 
 const PORT = process.env.PORT || 3000;
