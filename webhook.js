@@ -159,7 +159,7 @@ cron.schedule("0 8 * * *", async () => {
     if (debiteurs.length === 0) continue;
 
     const liste = debiteurs
-      .map(([client, montant]) => "- " + client + " : " + montant.toLocaleString() + " GNF")
+      .map(([client, montant]) => "- " + client + " : " + montant.toLocaleString())
       .join("\n");
 
     const message = "Rappel credits non rembourses depuis 7 jours :\n" + liste + "\n\nPense a relancer tes clients !";
@@ -204,7 +204,7 @@ cron.schedule("0 7 * * 1", async () => {
     const credits = transactions.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
     const remboursements = transactions.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
 
-    const message = "Bilan de la semaine :\n\nVentes : " + ventes.toLocaleString() + " GNF\nDepenses : " + depenses.toLocaleString() + " GNF\nBenefice : " + (ventes - depenses).toLocaleString() + " GNF\nCredits accordes : " + credits.toLocaleString() + " GNF\nRemboursements recus : " + remboursements.toLocaleString() + " GNF\n\nBonne semaine !";
+    const message = "Bilan de la semaine :\n\nVentes : " + ventes.toLocaleString() + "\nDepenses : " + depenses.toLocaleString() + "\nBenefice : " + (ventes - depenses).toLocaleString() + "\nCredits accordes : " + credits.toLocaleString() + "\nRemboursements recus : " + remboursements.toLocaleString() + "\n\nBonne semaine !";
 
     try {
       await twilioClient.messages.create({
@@ -248,7 +248,7 @@ cron.schedule("0 7 1 * *", async () => {
 
     const moisNom = debutMois.toLocaleString("fr-FR", { month: "long", year: "numeric" });
 
-    const message = "Bilan du mois de " + moisNom + " :\n\nVentes : " + ventes.toLocaleString() + " GNF\nDepenses : " + depenses.toLocaleString() + " GNF\nBenefice : " + (ventes - depenses).toLocaleString() + " GNF\nCredits accordes : " + credits.toLocaleString() + " GNF\nRemboursements recus : " + remboursements.toLocaleString() + " GNF\nTransactions totales : " + transactions.length + "\n\nBon debut de mois !";
+    const message = "Bilan du mois de " + moisNom + " :\n\nVentes : " + ventes.toLocaleString() + "\nDepenses : " + depenses.toLocaleString() + "\nBenefice : " + (ventes - depenses).toLocaleString() + "\nCredits accordes : " + credits.toLocaleString() + "\nRemboursements recus : " + remboursements.toLocaleString() + "\nTransactions totales : " + transactions.length + "\n\nBon debut de mois !";
 
     try {
       await twilioClient.messages.create({

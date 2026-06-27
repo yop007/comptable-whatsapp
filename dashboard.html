@@ -172,8 +172,8 @@
 
       document.getElementById('stat-users').textContent = data.stats.users;
       document.getElementById('stat-transactions').textContent = data.stats.transactionsToday;
-      document.getElementById('stat-ventes').textContent = (data.stats.ventesToday || 0).toLocaleString() + ' GNF';
-      document.getElementById('stat-credits').textContent = (data.stats.creditsEnCours || 0).toLocaleString() + ' GNF';
+      document.getElementById('stat-ventes').textContent = (data.stats.ventesToday || 0).toLocaleString();
+      document.getElementById('stat-credits').textContent = (data.stats.creditsEnCours || 0).toLocaleString();
       document.getElementById('last-update').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
 
       allTransactions = data.transactions;
@@ -205,7 +205,7 @@
           <td>${new Date(t.created_at).toLocaleString('fr-FR')}</td>
           <td>${t.telephone || '—'}</td>
           <td><span class="badge ${t.type}">${t.type}</span></td>
-          <td>${t.montant ? t.montant.toLocaleString() + ' GNF' : '—'}</td>
+          <td>${t.montant ? t.montant.toLocaleString() : '—'}</td>
           <td>${t.description || '—'}</td>
           <td>${t.client || '—'}</td>
         </tr>
@@ -237,7 +237,7 @@
 function exportTXT() {
   const filtered = getFiltered();
   const lines = filtered.map(t =>
-    `${new Date(t.created_at).toLocaleString('fr-FR')} | ${t.type.toUpperCase()} | ${t.montant ? t.montant.toLocaleString() + ' GNF' : '—'} | ${t.description || '—'} | ${t.client || '—'}`
+    `${new Date(t.created_at).toLocaleString('fr-FR')} | ${t.type.toUpperCase()} | ${t.montant ? t.montant.toLocaleString() : '—'} | ${t.description || '—'} | ${t.client || '—'}`
   );
   const total_ventes = filtered.filter(t => t.type === 'vente').reduce((s, t) => s + (t.montant || 0), 0);
   const total_depenses = filtered.filter(t => t.type === 'depense').reduce((s, t) => s + (t.montant || 0), 0);
@@ -249,10 +249,10 @@ function exportTXT() {
     `Nombre de transactions : ${filtered.length}`,
     '',
     '--- RÉSUMÉ ---',
-    `Ventes totales    : ${total_ventes.toLocaleString()} GNF`,
-    `Dépenses totales  : ${total_depenses.toLocaleString()} GNF`,
-    `Bénéfice          : ${(total_ventes - total_depenses).toLocaleString()} GNF`,
-    `Crédits accordés  : ${total_credits.toLocaleString()} GNF`,
+    `Ventes totales    : ${total_ventes.toLocaleString()}`,
+    `Dépenses totales  : ${total_depenses.toLocaleString()}`,
+    `Bénéfice          : ${(total_ventes - total_depenses).toLocaleString()}`,
+    `Crédits accordés  : ${total_credits.toLocaleString()}`,
     '',
     '--- DÉTAIL ---',
     ...lines

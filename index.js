@@ -369,7 +369,7 @@ export async function processMessage(telephone, message) {
     if (debiteurs.length === 0) return "Aucun credit en cours.";
 
     const liste = debiteurs
-      .map(([client, montant]) => "- " + client + " : " + montant.toLocaleString() + " GNF")
+      .map(([client, montant]) => "- " + client + " : " + montant.toLocaleString())
       .join("\n");
 
     return "Credits en cours :\n" + liste;
@@ -500,7 +500,7 @@ export async function processMessage(telephone, message) {
   }
 
   if (extracted.type === "inconnu") {
-    return "Je n ai pas compris. Exemples :\n- Vente 500000 GNF riz\n- Depense 100000 GNF transport\n- Credit Mamadou 300000 GNF";
+    return "Je n ai pas compris. Exemples :\n- Vente 500000 riz\n- Depense 100000 transport\n- Credit Mamadou 300000";
   }
 
   if (extracted.type === "aide") {
@@ -544,5 +544,6 @@ export async function processMessage(telephone, message) {
   }
 
   await saveTransaction(user.id, extracted);
-  return ("Enregistre : " + extracted.type + " de " + extracted.montant?.toLocaleString() + " " + (extracted.devise || "") + (extracted.description ? " - " + extracted.description : "") + (extracted.client ? " (client: " + extracted.client + ")" : "")).trim();
+  const deviseAffichee = extracted.devise ? " " + extracted.devise : "";
+  return ("Enregistre : " + extracted.type + " de " + extracted.montant?.toLocaleString() + deviseAffichee + (extracted.description ? " - " + extracted.description : "") + (extracted.client ? " (client: " + extracted.client + ")" : "")).trim();
 }
