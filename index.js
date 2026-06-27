@@ -342,7 +342,21 @@ export async function processMessage(telephone, message) {
   }
 
   if (extracted.type === "aide") {
-    return "Commandes disponibles :\n\nVentes : Vente 500000 GNF riz\nDepenses : Depense 100000 GNF transport\nCredits : Credit Mamadou 300000 GNF\nRemboursements : Mamadou a paye 150000\nBilan : Bilan du jour / Bilan du mois\nListe credits : Qui me doit\nSolde client : Combien Mamadou me doit ?";
+    return "Commandes Bilan Pro :\n\n" +
+      "ENREGISTRER :\n" +
+      "vt 50000 riz       = Vente\n" +
+      "dp 10000 transport = Depense\n" +
+      "cr Mamadou 30000   = Credit\n" +
+      "rb Mamadou 15000   = Remboursement\n\n" +
+      "CONSULTER :\n" +
+      "bl            = Bilan du jour\n" +
+      "bl mois       = Bilan du mois\n" +
+      "lc            = Liste des credits\n" +
+      "Combien X me doit ?\n\n" +
+      "AUTRES :\n" +
+      "annuler       = Annuler la derniere operation\n" +
+      "pin oublie    = Recuperer ton PIN\n" +
+      "aide          = Afficher ce menu";
   }
 
   await saveTransaction(user.id, extracted);
