@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bilan Pro — Mon compte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+
+    header {
+      background: #085041;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.2rem; }
+    #btn-deconnexion {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    #btn-deconnexion:hover { background: rgba(255,255,255,0.25); }
+
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .login-box {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .login-box .logo { text-align: center; margin-bottom: 1.5rem; }
+    .login-box .logo h2 { color: #085041; font-size: 1.5rem; }
+    .login-box .logo p { color: #888; font-size: 13px; margin-top: 4px; }
+    .login-box label { font-size: 13px; color: #555; display: block; margin-bottom: 6px; }
+    .login-box input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+    .login-box input:focus { outline: none; border-color: #085041; }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #085041;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .login-box button:hover { background: #064032; }
+    #login-error { color: #c0392b; font-size: 13px; margin-top: 8px; text-align: center; min-height: 20px; }
+
+    #client-screen { display: none; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      padding: 1.5rem;
+    }
+    @media (min-width: 600px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .stat-card .label { font-size: 12px; color: #888; margin-bottom: 6px; }
+    .stat-card .value { font-size: 22px; font-weight: 600; color: #085041; }
+
+    .section { padding: 0 1.5rem 2rem; }
+    .section h2 { font-size: 1rem; color: #555; margin-bottom: 1rem; }
+
+    table { width: 100%; background: white; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-collapse: collapse; }
+    th { text-align: left; padding: 10px 14px; font-size: 12px; color: #888; border-bottom: 1px solid #eee; }
+    td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f5f5f5; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+    .badge.vente { background: #e1f5ee; color: #085041; }
+    .badge.depense { background: #ffeee8; color: #c0392b; }
+    .badge.credit { background: #fff8e1; color: #e67e22; }
+    .badge.remboursement { background: #e8f4fd; color: #2980b9; }
+    .loading { text-align: center; padding: 2rem; color: #888; }
+  </style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="logo">
+      <h2>Bilan Pro</h2>
+      <p>Connecte-toi pour acceder a ton compte</p>
+    </div>
+    <label>Numero de telephone</label>
+    <input type="tel" id="input-tel" placeholder="+224612345678" />
+    <label>PIN (4 chiffres)</label>
+    <input type="password" id="input-pin" placeholder="****" maxlength="4" />
+    <button onclick="login()">Se connecter</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div id="client-screen">
+  <header>
+    <h1>Mon compte Bilan Pro</h1>
+    <button id="btn-deconnexion" onclick="deconnexion()">Se deconnecter</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="label">Ventes du mois</div>
+      <div class="value" id="stat-ventes">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Depenses du mois</div>
+      <div class="value" id="stat-depenses">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Benefice du mois</div>
+      <div class="value" id="stat-benefice">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Credits en cours</div>
+      <div class="value" id="stat-credits">—</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Historique des transactions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Description</th>
+          <th>Client</th>
+        </tr>
+      </thead>
+      <tbody id="transactions-tbody">
+        <tr><td colspan="5" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let userId = null;
+
+  async function login() {
+    const telephone = document.getElementById('input-tel').value.trim();
+    const pin = document.getElementById('input-pin').value.trim();
+    const errDiv = document.getElementById('login-error');
+    errDiv.textContent = '';
+
+    if (!telephone || !pin) {
+      errDiv.textContent = 'Remplis tous les champs.';
+      return;
+    }
+
+    try {
+      const res = await fetch('/client/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telephone, pin })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        errDiv.textContent = data.error || 'Erreur de connexion.';
+        return;
+      }
+
+      userId = data.user.id;
+      localStorage.setItem('client_user_id', userId);
+      afficherDashboard();
+    } catch (err) {
+      errDiv.textContent = 'Erreur technique. Reessaie.';
+    }
+  }
+
+  function deconnexion() {
+    userId = null;
+    localStorage.removeItem('client_user_id');
+    document.getElementById('client-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('input-pin').value = '';
+  }
+
+  async function afficherDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('client-screen').style.display = 'block';
+    await chargerDonnees();
+  }
+
+  async function chargerDonnees() {
+    try {
+      const res = await fetch('/client/data', {
+        headers: { 'Authorization': 'Bearer ' + userId }
+      });
+      const data = await res.json();
+
+      document.getElementById('stat-ventes').textContent = data.stats.ventes.toLocaleString();
+      document.getElementById('stat-depenses').textContent = data.stats.depenses.toLocaleString();
+      document.getElementById('stat-benefice').textContent = data.stats.benefice.toLocaleString();
+      document.getElementById('stat-credits').textContent = data.stats.credits.toLocaleString();
+
+      const tbody = document.getElementById('transactions-tbody');
+      if (!data.transactions.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="loading">Aucune transaction</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.transactions.map(t => `
+        <tr>
+          <td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td>
+          <td><span class="badge ${t.type}">${t.type}</span></td>
+          <td>${t.montant.toLocaleString()}</td>
+          <td>${t.description || '—'}</td>
+          <td>${t.client || '—'}</td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  window.onload = () => {
+    const saved = localStorage.getItem('client_user_id');
+    if (saved) {
+      userId = saved;
+      afficherDashboard();
+    }
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+
+</body>
+</html>
