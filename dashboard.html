@@ -35,7 +35,10 @@
 <body>
   <header>
     <h1>Bilan WA — Dashboard Admin</h1>
-    <span id="last-update"></span>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span id="last-update" style="font-size:12px;opacity:0.7;"></span>
+      <button onclick="deconnexion()" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.3);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;">Se deconnecter</button>
+    </div>
   </header>
 
   <div class="stats">
@@ -209,6 +212,15 @@ function download(filename, content, type) {
   a.click();
   URL.revokeObjectURL(url);
 }
+    function deconnexion() {
+      // Force la deconnexion en envoyant de mauvaises credentials
+      fetch('/admin', {
+        headers: { 'Authorization': 'Basic ' + btoa(':logout') }
+      }).finally(() => {
+        window.location.href = 'https://' + window.location.host + '/admin?logout=' + Date.now();
+      });
+    }
+
     loadData();
     setInterval(loadData, 30000);
   </script>
