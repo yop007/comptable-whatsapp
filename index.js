@@ -227,8 +227,13 @@ export async function processMessage(telephone, message) {
       delete pendingPinRecovery[telephone];
       return "Bonne reponse !\n\nTon PIN est : " + pin + "\n\nPense a le noter dans un endroit sur.";
     } else {
-      delete pendingPinRecovery[telephone];
-      return "Reponse incorrecte. Si tu as oublie ta reponse secrete, contacte le support.";
+      pendingPinRecovery[telephone].tentatives = (pendingPinRecovery[telephone].tentatives || 0) + 1;
+      if (pendingPinRecovery[telephone].tentatives >= 3) {
+        delete pendingPinRecovery[telephone];
+        return "Reponse incorrecte 3 fois. Contacte le support pour recuperer ton compte.";
+      }
+      const restantes = 3 - pendingPinRecovery[telephone].tentatives;
+      return "Reponse incorrecte. Il te reste " + restantes + " tentative(s).\n\nQuestion : " + pendingPinRecovery[telephone].question + "\n\nEssaie a nouveau :";
     }
   }
 
@@ -325,7 +330,9 @@ export async function processMessage(telephone, message) {
     pendingPinRecovery[telephone] = {
       step: "reponse",
       pin: user.pin,
-      reponse_secrete: user.reponse_secrete
+      question: user.question_secrete,
+      reponse_secrete: user.reponse_secrete,
+      tentatives: 0
     };
     return "Question secrete : " + user.question_secrete + "\n\nQuelle est ta reponse ?";
   }
