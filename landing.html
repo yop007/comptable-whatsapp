@@ -428,8 +428,16 @@ Budget restant : 55 000</div><div class="bubble-time">18:00</div></div>
 
   // Fermer le menu au clic sur un lien
   document.querySelectorAll('.nav-links a').forEach(a => {
-    a.addEventListener('click', () => {
+    a.addEventListener('click', (e) => {
+      const href = a.getAttribute('href');
       document.getElementById('nav-links').classList.remove('open');
+      if (href && href.startsWith('#')) {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          setTimeout(() => target.scrollIntoView({ behavior: 'smooth' }), 50);
+        }
+      }
     });
   });
 
