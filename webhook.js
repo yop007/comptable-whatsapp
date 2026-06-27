@@ -4,12 +4,14 @@ import cron from "node-cron";
 import { createClient } from "@supabase/supabase-js";
 import { processMessage } from "./index.js";
 import ws from "ws";
+import cors from "cors";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
-import cors from "cors";
-import { readFileSync } from "fs";
-
 app.use(cors());
 app.use(express.json());
 
@@ -28,7 +30,7 @@ app.get("/admin", (req, res) => {
     res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
     return res.status(401).send("Mot de passe incorrect");
   }
-  res.sendFile(new URL("./dashboard.html", import.meta.url).pathname);
+  res.sendFile(join(__dirname, "dashboard.html"));
 });
 
 app.get("/admin/data", (req, res, next) => {
@@ -46,7 +48,7 @@ app.get("/admin/data", (req, res, next) => {
 
 // Landing page
 app.get("/", (req, res) => {
-  res.sendFile(new URL("./landing.html", import.meta.url).pathname);
+  res.sendFile(join(__dirname, "landing.html"));
 });
 
 app.get("/admin/data", async (req, res) => {
@@ -60,26 +62,26 @@ app.get("/admin/data", async (req, res) => {
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const transactionsToday = transactions.filter(t => new Date(t.created_at) >= today);
+  const transactionsToday = (transactions || []).filter(t => new Date(t.created_at) >= today);
   const ventesToday = transactionsToday
     .filter(t => t.type === "vente")
     .reduce((s, t) => s + t.montant, 0);
 
-  const creditsEnCours = transactions
+  const creditsEnCours = (transactions || [])
     .filter(t => t.type === "credit")
     .reduce((s, t) => s + t.montant, 0) -
-    transactions
+    (transactions || [])
     .filter(t => t.type === "remboursement")
     .reduce((s, t) => s + t.montant, 0);
 
-  const formatted = transactions.map(t => ({
+  const formatted = (transactions || []).map(t => ({
     ...t,
     telephone: t.utilisateurs?.telephone || "-"
   }));
 
   res.json({
     stats: {
-      users: users.length,
+      users: (users || []).length,
       transactionsToday: transactionsToday.length,
       ventesToday,
       creditsEnCours
@@ -123,7 +125,7 @@ cron.schedule("0 8 * * *", async () => {
     .from("utilisateurs")
     .select("*");
 
-  for (const user of utilisateurs) {
+  for (const user of (utilisateurs || [])) {
     const { data: transactions } = await supabase
       .from("transactions")
       .select("*")
@@ -133,7 +135,7 @@ cron.schedule("0 8 * * *", async () => {
     const soldes = {};
     const derniereDate = {};
 
-    for (const t of transactions) {
+    for (const t of (transactions || []).filter(t => t.client !== null)) {
       if (!soldes[t.client]) {
         soldes[t.client] = 0;
         derniereDate[t.client] = t.created_at;
@@ -188,7 +190,7 @@ cron.schedule("0 7 * * 1", async () => {
   debutSemaine.setDate(maintenant.getDate() - 7);
   debutSemaine.setHours(0, 0, 0, 0);
 
-  for (const user of utilisateurs) {
+  for (const user of (utilisateurs || [])) {
     const { data: transactions } = await supabase
       .from("transactions")
       .select("*")
@@ -227,15 +229,15 @@ cron.schedule("0 7 1 * *", async () => {
 
   const maintenant = new Date();
   const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth() - 1, 1);
-  const finMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 0, 23, 59, 59);
+  const debutMoisCourant = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
 
-  for (const user of utilisateurs) {
+  for (const user of (utilisateurs || [])) {
     const { data: transactions } = await supabase
       .from("transactions")
       .select("*")
       .eq("utilisateur_id", user.id)
       .gte("created_at", debutMois.toISOString())
-      .lte("created_at", finMois.toISOString());
+      .lt("created_at", debutMoisCourant.toISOString());
 
     if (!transactions || transactions.length === 0) continue;
 
@@ -261,4 +263,10 @@ cron.schedule("0 7 1 * *", async () => {
   }
 });
 
-app.listen(3000, () => console.log("Serveur demarre sur port 3000"));
+// Panel client
+app.get("/client", (req, res) => {
+  res.sendFile(join(__dirname, "client.html"));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Serveur demarre sur port " + PORT));
