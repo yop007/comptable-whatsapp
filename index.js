@@ -159,6 +159,14 @@ export async function processMessage(telephone, message) {
     return "Ton compte n a pas encore de PIN configure.\nEnvoie un code a 4 chiffres pour securiser ton compte :";
   }
 
+  const QUESTIONS_SECRETES = [
+    "1. Le prenom de ta mere ?",
+    "2. Le nom de ton ecole primaire ?",
+    "3. Le nom de ta ville natale ?",
+    "4. Le prenom de ton meilleur ami d enfance ?",
+    "5. Le nom de ton premier animal ?"
+  ];
+
   if (pendingPins[telephone]?.step === "create") {
     if (!/^\d{4}$/.test(message.trim())) {
       return "PIN invalide. Envoie exactement 4 chiffres (ex: 1234)";
@@ -172,12 +180,42 @@ export async function processMessage(telephone, message) {
       pendingPins[telephone] = { step: "create" };
       return "Les PIN ne correspondent pas. Recommence :";
     }
+    pendingPins[telephone] = { step: "question", pin: message.trim() };
+    return "PIN confirme !\n\nChoisis une question secrete pour recuperer ton PIN :\n\n" + QUESTIONS_SECRETES.join("\n") + "\n\nReponds avec le numero (1 a 5) :";
+  }
+
+  if (pendingPins[telephone]?.step === "question") {
+    const choix = parseInt(message.trim());
+    if (isNaN(choix) || choix < 1 || choix > 5) {
+      return "Choix invalide. Reponds avec un numero entre 1 et 5 :";
+    }
+    const questions = [
+      "Le prenom de ta mere ?",
+      "Le nom de ton ecole primaire ?",
+      "Le nom de ta ville natale ?",
+      "Le prenom de ton meilleur ami d enfance ?",
+      "Le nom de ton premier animal ?"
+    ];
+    pendingPins[telephone] = { step: "reponse", pin: pendingPins[telephone].pin, question: questions[choix - 1] };
+    return "Question choisie : " + questions[choix - 1] + "\n\nQuelle est ta reponse ?";
+  }
+
+  if (pendingPins[telephone]?.step === "reponse") {
+    const reponse = message.trim().toLowerCase();
+    if (!reponse) {
+      return "Reponse invalide. Essaie a nouveau :";
+    }
     await supabase
       .from("utilisateurs")
-      .update({ pin: message.trim(), pin_confirme: true })
+      .update({
+        pin: pendingPins[telephone].pin,
+        pin_confirme: true,
+        question_secrete: pendingPins[telephone].question,
+        reponse_secrete: reponse
+      })
       .eq("telephone", telephone);
     delete pendingPins[telephone];
-    return "PIN cree avec succes !\n\nBienvenue sur Bilan WA !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !";
   }
 
   const extracted = await extractTransaction(message);
