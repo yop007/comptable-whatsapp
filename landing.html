@@ -74,7 +74,28 @@
     .cta h2 { font-size: 1.8rem; margin-bottom: 1rem; }
     .cta p { opacity: 0.9; margin-bottom: 2rem; }
 
-    /* FOOTER */
+    /* FAQ */
+    .faq { padding: 4rem 2rem; max-width: 800px; margin: 0 auto; }
+    .faq h2 { font-size: 1.8rem; text-align: center; margin-bottom: 2.5rem; color: #085041; }
+    .faq-item { border: 1px solid #eee; border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
+    .faq-question { padding: 1rem 1.5rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: 500; background: white; }
+    .faq-question:hover { background: #f9f9f7; }
+    .faq-question .arrow { transition: transform 0.2s; font-size: 12px; color: #085041; }
+    .faq-question.open .arrow { transform: rotate(180deg); }
+    .faq-answer { display: none; padding: 0 1.5rem 1rem; font-size: 14px; color: #555; line-height: 1.6; }
+    .faq-answer.open { display: block; }
+
+    /* CONTACT */
+    .contact { padding: 4rem 2rem; background: #f9f9f7; }
+    .contact h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; }
+    .contact .sub { text-align: center; color: #888; margin-bottom: 2rem; }
+    .contact form { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+    .contact input, .contact select, .contact textarea { padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
+    .contact input:focus, .contact select:focus, .contact textarea:focus { outline: none; border-color: #085041; }
+    .contact textarea { resize: vertical; min-height: 120px; }
+    .contact button { padding: 14px; background: #085041; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .contact button:hover { background: #064032; }
+    #contact-success { display: none; text-align: center; color: #085041; font-weight: 600; padding: 1rem; background: #e1f5ee; border-radius: 8px; }
     footer { background: #333; color: #aaa; padding: 1.5rem 2rem; text-align: center; font-size: 13px; }
 
     @media (max-width: 600px) {
@@ -92,6 +113,7 @@
     <a href="#fonctionnalites" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
     <a href="#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a>
     <a href="#faq" data-fr="FAQ" data-en="FAQ">FAQ</a>
+    <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
     <a href="/client" data-fr="Mon compte" data-en="My account">Mon compte</a>
   </div>
   <div class="nav-right">
@@ -180,6 +202,78 @@
   </div>
 </section>
 
+<section id="faq" class="faq">
+  <h2 data-fr="Questions fréquentes" data-en="Frequently asked questions">Questions fréquentes</h2>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Faut-il installer une application ?" data-en="Do I need to install an app?">Faut-il installer une application ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Non. Bilan Pro fonctionne directement via WhatsApp. Aucune installation nécessaire." data-en="No. Bilan Pro works directly via WhatsApp. No installation required.">Non. Bilan Pro fonctionne directement via WhatsApp. Aucune installation nécessaire.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Dans quelles langues fonctionne Bilan Pro ?" data-en="What languages does Bilan Pro support?">Dans quelles langues fonctionne Bilan Pro ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Bilan Pro comprend le français et l'anglais. Le support d'autres langues (pidgin, peul) est en cours de développement." data-en="Bilan Pro understands French and English. Support for other languages (pidgin, Fula) is in development.">Bilan Pro comprend le français et l'anglais. Le support d'autres langues est en cours de développement.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Est-ce que mes données sont sécurisées ?" data-en="Is my data secure?">Est-ce que mes données sont sécurisées ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Oui. Vos données sont stockées de manière sécurisée et protégées par un code PIN que vous seul connaissez." data-en="Yes. Your data is stored securely and protected by a PIN code that only you know.">Oui. Vos données sont stockées de manière sécurisée et protégées par un code PIN que vous seul connaissez.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Puis-je utiliser Bilan Pro pour mon budget personnel ?" data-en="Can I use Bilan Pro for my personal budget?">Puis-je utiliser Bilan Pro pour mon budget personnel ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Oui ! Bilan Pro dispose d'un mode personnel pour suivre vos dépenses du quotidien (loyer, nourriture, transport...). Tapez 'mode perso' pour l'activer." data-en="Yes! Bilan Pro has a personal mode to track your daily expenses (rent, food, transport...). Type 'mode perso' to activate it.">Oui ! Bilan Pro dispose d'un mode personnel pour suivre vos dépenses du quotidien. Tapez 'mode perso' pour l'activer.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Comment récupérer mon compte si je change de numéro ?" data-en="How do I recover my account if I change my number?">Comment récupérer mon compte si je change de numéro ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Envoyez 'changer numero' depuis votre nouveau numéro et suivez les instructions. Votre ancien numéro et PIN seront demandés pour vérification." data-en="Send 'changer numero' from your new number and follow the instructions. Your old number and PIN will be requested for verification.">Envoyez 'changer numero' depuis votre nouveau numéro et suivez les instructions.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question" onclick="toggleFaq(this)">
+      <span data-fr="Bilan Pro fonctionne-t-il dans mon pays ?" data-en="Does Bilan Pro work in my country?">Bilan Pro fonctionne-t-il dans mon pays ?</span>
+      <span class="arrow">▼</span>
+    </div>
+    <div class="faq-answer" data-fr="Bilan Pro fonctionne partout où WhatsApp est disponible. Vous pouvez utiliser n'importe quelle devise." data-en="Bilan Pro works anywhere WhatsApp is available. You can use any currency.">Bilan Pro fonctionne partout où WhatsApp est disponible. Vous pouvez utiliser n'importe quelle devise.</div>
+  </div>
+
+</section>
+
+<section id="contact" class="contact">
+  <h2 data-fr="Contactez-nous" data-en="Contact us">Contactez-nous</h2>
+  <p class="sub" data-fr="Question, suggestion ou problème ? On vous répond rapidement." data-en="Question, suggestion or problem? We reply quickly.">Question, suggestion ou problème ? On vous répond rapidement.</p>
+  <form onsubmit="envoyerContact(event)">
+    <input type="text" id="contact-nom" placeholder="Votre nom" required />
+    <input type="text" id="contact-tel" placeholder="Téléphone ou email" required />
+    <select id="contact-sujet">
+      <option value="question" data-fr="Question générale" data-en="General question">Question générale</option>
+      <option value="suggestion" data-fr="Suggestion" data-en="Suggestion">Suggestion</option>
+      <option value="support" data-fr="Support technique" data-en="Technical support">Support technique</option>
+      <option value="revendication" data-fr="Revendication" data-en="Complaint">Revendication</option>
+      <option value="partenariat" data-fr="Partenariat" data-en="Partnership">Partenariat</option>
+    </select>
+    <textarea id="contact-message" placeholder="Votre message..." required></textarea>
+    <button type="submit" data-fr="Envoyer" data-en="Send">Envoyer</button>
+    <div id="contact-success" data-fr="✅ Message envoyé ! Nous vous répondrons bientôt." data-en="✅ Message sent! We will reply soon.">✅ Message envoyé ! Nous vous répondrons bientôt.</div>
+  </form>
+</section>
+
 <section class="cta">
   <h2 data-fr="Prêt à mieux gérer votre business ?" data-en="Ready to better manage your shop?">Prêt à mieux gérer votre business ?</h2>
   <p data-fr="Rejoignez les utilisateurs qui gèrent déjà leur business avec Bilan Pro." data-en="Join the users already managing their business with Bilan Pro.">Rejoignez les utilisateurs qui gèrent déjà leur business avec Bilan Pro.</p>
@@ -194,6 +288,32 @@
 </footer>
 
 <script>
+  function toggleFaq(el) {
+    el.classList.toggle('open');
+    const answer = el.nextElementSibling;
+    answer.classList.toggle('open');
+  }
+
+  async function envoyerContact(e) {
+    e.preventDefault();
+    const nom = document.getElementById('contact-nom').value.trim();
+    const tel = document.getElementById('contact-tel').value.trim();
+    const sujet = document.getElementById('contact-sujet').value;
+    const message = document.getElementById('contact-message').value.trim();
+    try {
+      await fetch('/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, tel, message: '[' + sujet + '] ' + message })
+      });
+      document.getElementById('contact-success').style.display = 'block';
+      e.target.reset();
+      setTimeout(() => { document.getElementById('contact-success').style.display = 'none'; }, 5000);
+    } catch(err) {
+      alert('Erreur technique. Reessaie.');
+    }
+  }
+
   function toggleNav() {
     const links = document.getElementById('nav-links');
     links.classList.toggle('open');
