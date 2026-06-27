@@ -47,11 +47,12 @@ Regles importantes :
 - "habit", "vetements", "fringues", "chaussures" = budget_depense, categorie: vetements
 - "loisirs", "sortie", "cinema", "restaurant", "vacances" = budget_depense, categorie: loisirs
 
+- "budget", "definir budget", "mon budget", "fixer budget" = budget_definir
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -289,7 +290,8 @@ export async function processMessage(telephone, message) {
       return "Bilan perso " + (extracted.periode === "mois" ? "du mois" : "du jour") + " :\n\n" +
         lignes + "\n" +
         "───────────────────\n" +
-        "Total depense : " + total.toLocaleString();
+        "Total depense : " + total.toLocaleString() +
+        (user.budget_mensuel ? "\nBudget restant : " + (user.budget_mensuel - total).toLocaleString() + (total > user.budget_mensuel ? " \u26a0\ufe0f BUDGET DEPASSE !" : "") : "");
     }
     if (extracted.client) {
       const solde = await getSoldeClient(user.id, extracted.client);
@@ -403,6 +405,17 @@ export async function processMessage(telephone, message) {
     return "Mode actif : " + (mode === "perso" ? "Personnel" : "Business") + "\n\nTape \"mode perso\" ou \"mode business\" pour changer.";
   }
 
+  if (extracted.type === "budget_definir") {
+    if (extracted.montant) {
+      await supabase.from("utilisateurs").update({ budget_mensuel: extracted.montant }).eq("telephone", telephone);
+      return "💰 Budget mensuel defini : " + extracted.montant.toLocaleString() + "\n\nJe te signalerai quand tu approches de la limite.";
+    }
+    // Pas de montant — afficher le budget actuel
+    const budget = user.budget_mensuel;
+    if (!budget) return "💰 Aucun budget defini.\n\nPour definir un budget, envoie :\nbudget 500000";
+    return "💰 Ton budget mensuel : " + budget.toLocaleString() + "\n\nEnvoie \"budget 500000\" pour le modifier.";
+  }
+
   if (extracted.type === "budget_depense") {
     if (!extracted.montant) return "Montant manquant. Exemple : loyer 150000";
     const categorie = extracted.categorie || "autre";
@@ -415,7 +428,23 @@ export async function processMessage(telephone, message) {
       description: extracted.description || categorie,
       categorie: categorie
     });
-    return emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "") + "\nCategorie : " + categorie;
+    const confirmation = emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "") + "\nCategorie : " + categorie;
+
+    // Alerte budget si defini
+    if (user.budget_mensuel) {
+      const debutMois = new Date();
+      debutMois.setDate(1);
+      debutMois.setHours(0, 0, 0, 0);
+      const { data: txMois } = await supabase.from("transactions").select("montant").eq("utilisateur_id", user.id).not("categorie", "is", null).gte("created_at", debutMois.toISOString());
+      const totalMois = (txMois || []).reduce((s, t) => s + t.montant, 0);
+      const restant = user.budget_mensuel - totalMois;
+      if (totalMois > user.budget_mensuel) {
+        return confirmation + "\n\n\u26a0\ufe0f Budget depasse de " + Math.abs(restant).toLocaleString() + " !";
+      } else if (totalMois >= user.budget_mensuel * 0.8) {
+        return confirmation + "\n\n\u26a0\ufe0f Attention : " + restant.toLocaleString() + " restant sur ton budget.";
+      }
+    }
+    return confirmation;
   }
 
   if (extracted.type === "inconnu") {
