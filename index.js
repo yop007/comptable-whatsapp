@@ -255,6 +255,22 @@ export async function processMessage(telephone, message) {
     }
   }
 
+  // Gestion choix annulation en attente
+  if (pendingCancellations[user.telephone]?.step === "choix") {
+    const choix = parseInt(message.trim());
+    const pending = pendingCancellations[user.telephone];
+    if (isNaN(choix) || choix < 1 || choix > pending.transactions.length) {
+      return "Choix invalide. Reponds avec un numero entre 1 et " + pending.transactions.length + " :";
+    }
+    const t = pending.transactions[choix - 1];
+    pendingCancellations[user.telephone] = { step: "confirmation", id: t.id, transaction: t };
+    return "Confirmer la suppression de :\n" +
+      t.type.toUpperCase() + " de " + t.montant?.toLocaleString() +
+      (t.description ? " - " + t.description : "") +
+      (t.client ? " (" + t.client + ")" : "") +
+      "\n\nReponds oui pour supprimer ou non pour annuler.";
+  }
+
   const extracted = await extractTransaction(message, user.mode_actif || "business");
 
   if (extracted.type === "bilan") {
@@ -343,32 +359,46 @@ export async function processMessage(telephone, message) {
       .select("*")
       .eq("utilisateur_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(1);
+      .limit(5);
 
     if (error) throw error;
     if (!data || data.length === 0) return "Aucune transaction a annuler.";
 
-    const derniere = data[0];
-    pendingCancellations[user.telephone] = derniere.id;
+    pendingCancellations[user.telephone] = { step: "choix", transactions: data };
 
-    return "Derniere operation enregistree :\n" +
-      derniere.type.toUpperCase() + " de " + derniere.montant?.toLocaleString() +
-      (derniere.description ? " - " + derniere.description : "") +
-      (derniere.client ? " (client: " + derniere.client + ")" : "") +
-      "\n\nConfirmer la suppression ? Reponds oui pour supprimer ou non pour annuler.";
+    const liste = data.map((t, i) =>
+      (i + 1) + ". " + t.type.toUpperCase() + " de " + t.montant?.toLocaleString() +
+      (t.description ? " - " + t.description : "") +
+      (t.client ? " (" + t.client + ")" : "") +
+      " | " + new Date(t.created_at).toLocaleDateString("fr-FR")
+    ).join("\n");
+
+    return "Quelle transaction veux-tu annuler ?\n\n" + liste + "\n\nReponds avec le numero (1 a " + data.length + ") :";
   }
 
   if (extracted.type === "confirmer") {
-    const transactionId = pendingCancellations[user.telephone];
-    if (!transactionId) return "Aucune suppression en attente.";
+    const pending = pendingCancellations[user.telephone];
+    if (!pending) return "Aucune suppression en attente.";
 
-    await supabase
-      .from("transactions")
-      .delete()
-      .eq("id", transactionId);
+    if (pending.step === "choix") {
+      const choix = parseInt(message.trim());
+      if (isNaN(choix) || choix < 1 || choix > pending.transactions.length) {
+        return "Choix invalide. Reponds avec un numero entre 1 et " + pending.transactions.length + " :";
+      }
+      const t = pending.transactions[choix - 1];
+      pendingCancellations[user.telephone] = { step: "confirmation", id: t.id, transaction: t };
+      return "Confirmer la suppression de :\n" +
+        t.type.toUpperCase() + " de " + t.montant?.toLocaleString() +
+        (t.description ? " - " + t.description : "") +
+        (t.client ? " (" + t.client + ")" : "") +
+        "\n\nReponds oui pour supprimer ou non pour annuler.";
+    }
 
-    delete pendingCancellations[user.telephone];
-    return "Transaction supprimee avec succes.";
+    if (pending.step === "confirmation") {
+      await supabase.from("transactions").delete().eq("id", pending.id);
+      delete pendingCancellations[user.telephone];
+      return "Transaction supprimee avec succes.";
+    }
   }
 
   if (extracted.type === "refuser") {
