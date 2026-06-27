@@ -3,6 +3,7 @@ import twilio from "twilio";
 import cron from "node-cron";
 import { createClient } from "@supabase/supabase-js";
 import { processMessage } from "./index.js";
+import ws from "ws";
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -19,7 +20,7 @@ app.get("/admin", (req, res) => {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Basic ")) {
     res.setHeader("WWW-Authenticate", 'Basic realm="Admin"');
-    return res.status(401).send("Accès non autorisé");
+    return res.status(401).send("Acces non autorise");
   }
   const credentials = Buffer.from(auth.split(" ")[1], "base64").toString();
   const [, password] = credentials.split(":");
@@ -33,7 +34,7 @@ app.get("/admin", (req, res) => {
 app.get("/admin/data", (req, res, next) => {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Basic ")) {
-    return res.status(401).json({ error: "Non autorisé" });
+    return res.status(401).json({ error: "Non autorise" });
   }
   const credentials = Buffer.from(auth.split(" ")[1], "base64").toString();
   const [, password] = credentials.split(":");
@@ -73,7 +74,7 @@ app.get("/admin/data", async (req, res) => {
 
   const formatted = transactions.map(t => ({
     ...t,
-    telephone: t.utilisateurs?.telephone || "—"
+    telephone: t.utilisateurs?.telephone || "-"
   }));
 
   res.json({
@@ -89,7 +90,8 @@ app.get("/admin/data", async (req, res) => {
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_ANON_KEY,
+  { realtime: { transport: ws } }
 );
 
 const twilioClient = twilio(
@@ -107,15 +109,15 @@ app.post("/webhook", async (req, res) => {
     twiml.message(reponse);
   } catch (err) {
     console.error(err);
-    twiml.message("Erreur technique, réessaie.");
+    twiml.message("Erreur technique, reessaie.");
   }
 
   res.type("text/xml").send(twiml.toString());
 });
 
-// Rappels crédits — chaque jour à 8h
+// Rappels credits -- chaque jour a 8h
 cron.schedule("0 8 * * *", async () => {
-  console.log("⏰ Lancement rappels crédits...");
+  console.log("Lancement rappels credits...");
 
   const { data: utilisateurs } = await supabase
     .from("utilisateurs")
@@ -155,10 +157,10 @@ cron.schedule("0 8 * * *", async () => {
     if (debiteurs.length === 0) continue;
 
     const liste = debiteurs
-      .map(([client, montant]) => `• ${client} : ${montant.toLocaleString()} GNF`)
+      .map(([client, montant]) => "- " + client + " : " + montant.toLocaleString() + " GNF")
       .join("\n");
 
-    const message = `⚠️ Rappel crédits non remboursés depuis 7 jours :\n${liste}\n\nPense à relancer tes clients !`;
+    const message = "Rappel credits non rembourses depuis 7 jours :\n" + liste + "\n\nPense a relancer tes clients !";
 
     try {
       await twilioClient.messages.create({
@@ -166,15 +168,16 @@ cron.schedule("0 8 * * *", async () => {
         to: user.telephone,
         body: message,
       });
-      console.log(`✅ Rappel envoyé à ${user.telephone}`);
+      console.log("Rappel envoye a " + user.telephone);
     } catch (err) {
-      console.error(`❌ Erreur envoi rappel à ${user.telephone}:`, err.message);
+      console.error("Erreur envoi rappel a " + user.telephone + ":", err.message);
     }
   }
 });
-// Bilan hebdomadaire — chaque lundi à 7h
+
+// Bilan hebdomadaire -- chaque lundi a 7h
 cron.schedule("0 7 * * 1", async () => {
-  console.log("📊 Envoi bilans hebdomadaires...");
+  console.log("Envoi bilans hebdomadaires...");
 
   const { data: utilisateurs } = await supabase
     .from("utilisateurs")
@@ -199,15 +202,7 @@ cron.schedule("0 7 * * 1", async () => {
     const credits = transactions.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
     const remboursements = transactions.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
 
-    const message = `📊 Bilan de la semaine :
-
-✅ Ventes : ${ventes.toLocaleString()} GNF
-💸 Dépenses : ${depenses.toLocaleString()} GNF
-💰 Bénéfice : ${(ventes - depenses).toLocaleString()} GNF
-📋 Crédits accordés : ${credits.toLocaleString()} GNF
-✅ Remboursements reçus : ${remboursements.toLocaleString()} GNF
-
-Bonne semaine ! 💪`;
+    const message = "Bilan de la semaine :\n\nVentes : " + ventes.toLocaleString() + " GNF\nDepenses : " + depenses.toLocaleString() + " GNF\nBenefice : " + (ventes - depenses).toLocaleString() + " GNF\nCredits accordes : " + credits.toLocaleString() + " GNF\nRemboursements recus : " + remboursements.toLocaleString() + " GNF\n\nBonne semaine !";
 
     try {
       await twilioClient.messages.create({
@@ -215,15 +210,16 @@ Bonne semaine ! 💪`;
         to: user.telephone,
         body: message,
       });
-      console.log(`✅ Bilan hebdo envoyé à ${user.telephone}`);
+      console.log("Bilan hebdo envoye a " + user.telephone);
     } catch (err) {
-      console.error(`❌ Erreur bilan hebdo ${user.telephone}:`, err.message);
+      console.error("Erreur bilan hebdo " + user.telephone + ":", err.message);
     }
   }
 });
-// Bilan mensuel — 1er de chaque mois à 7h
+
+// Bilan mensuel -- 1er de chaque mois a 7h
 cron.schedule("0 7 1 * *", async () => {
-  console.log("📊 Envoi bilans mensuels...");
+  console.log("Envoi bilans mensuels...");
 
   const { data: utilisateurs } = await supabase
     .from("utilisateurs")
@@ -248,18 +244,9 @@ cron.schedule("0 7 1 * *", async () => {
     const credits = transactions.filter(t => t.type === "credit").reduce((s, t) => s + t.montant, 0);
     const remboursements = transactions.filter(t => t.type === "remboursement").reduce((s, t) => s + t.montant, 0);
 
-    const moisNom = debutMois.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+    const moisNom = debutMois.toLocaleString("fr-FR", { month: "long", year: "numeric" });
 
-    const message = `📊 Bilan du mois de ${moisNom} :
-
-✅ Ventes : ${ventes.toLocaleString()} GNF
-💸 Dépenses : ${depenses.toLocaleString()} GNF
-💰 Bénéfice : ${(ventes - depenses).toLocaleString()} GNF
-📋 Crédits accordés : ${credits.toLocaleString()} GNF
-✅ Remboursements reçus : ${remboursements.toLocaleString()} GNF
-📈 Transactions totales : ${transactions.length}
-
-Bon début de mois ! 💪`;
+    const message = "Bilan du mois de " + moisNom + " :\n\nVentes : " + ventes.toLocaleString() + " GNF\nDepenses : " + depenses.toLocaleString() + " GNF\nBenefice : " + (ventes - depenses).toLocaleString() + " GNF\nCredits accordes : " + credits.toLocaleString() + " GNF\nRemboursements recus : " + remboursements.toLocaleString() + " GNF\nTransactions totales : " + transactions.length + "\n\nBon debut de mois !";
 
     try {
       await twilioClient.messages.create({
@@ -267,11 +254,11 @@ Bon début de mois ! 💪`;
         to: user.telephone,
         body: message,
       });
-      console.log(`✅ Bilan mensuel envoyé à ${user.telephone}`);
+      console.log("Bilan mensuel envoye a " + user.telephone);
     } catch (err) {
-      console.error(`❌ Erreur bilan mensuel ${user.telephone}:`, err.message);
+      console.error("Erreur bilan mensuel " + user.telephone + ":", err.message);
     }
   }
 });
 
-app.listen(3000, () => console.log("✅ Serveur démarré sur port 3000"));
+app.listen(3000, () => console.log("Serveur demarre sur port 3000"));
