@@ -74,6 +74,26 @@
     .cta h2 { font-size: 1.8rem; margin-bottom: 1rem; }
     .cta p { opacity: 0.9; margin-bottom: 2rem; }
 
+    /* EXEMPLES */
+    .exemples { padding: 4rem 2rem; background: white; }
+    .exemples h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; }
+    .exemples .sub { text-align: center; color: #888; margin-bottom: 2.5rem; }
+    .exemples-tabs { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
+    .exemples-tabs button { padding: 10px 24px; border-radius: 25px; border: 2px solid #085041; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; background: white; color: #085041; }
+    .exemples-tabs button.active { background: #085041; color: white; }
+    .exemples-content { display: none; max-width: 400px; margin: 0 auto; }
+    .exemples-content.active { display: block; }
+    .wa-screen { background: #e5ddd5; border-radius: 16px; padding: 1rem; }
+    .wa-header { background: #085041; color: white; border-radius: 12px 12px 0 0; padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin: -1rem -1rem 1rem; font-size: 14px; font-weight: 600; }
+    .wa-avatar { width: 36px; height: 36px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .bubble { margin: 8px 0; display: flex; flex-direction: column; }
+    .bubble.sent { align-items: flex-end; }
+    .bubble.received { align-items: flex-start; }
+    .bubble-text { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-line; }
+    .bubble.sent .bubble-text { background: #dcf8c6; border-radius: 12px 12px 0 12px; }
+    .bubble.received .bubble-text { background: white; border-radius: 12px 12px 12px 0; }
+    .bubble-time { font-size: 10px; color: #888; margin-top: 2px; padding: 0 4px; }
+
     /* FAQ */
     .faq { padding: 4rem 2rem; max-width: 800px; margin: 0 auto; }
     .faq h2 { font-size: 1.8rem; text-align: center; margin-bottom: 2.5rem; color: #085041; }
@@ -112,6 +132,7 @@
   <div class="nav-links" id="nav-links">
     <a href="#fonctionnalites" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
     <a href="#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a>
+    <a href="#exemples" data-fr="Exemples" data-en="Examples">Exemples</a>
     <a href="#faq" data-fr="FAQ" data-en="FAQ">FAQ</a>
     <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
     <a href="/client" data-fr="Mon compte" data-en="My account">Mon compte</a>
@@ -153,6 +174,21 @@
       <h3 data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</h3>
       <p data-fr="Bilan du jour, de la semaine et du mois envoyé automatiquement sur WhatsApp." data-en="Daily, weekly and monthly reports sent automatically on WhatsApp.">Bilan du jour, de la semaine et du mois envoyé automatiquement sur WhatsApp.</p>
     </div>
+    <div class="feature">
+      <div class="icon">🏠</div>
+      <h3 data-fr="Budget personnel" data-en="Personal budget">Budget personnel</h3>
+      <p data-fr="Suivez vos dépenses du quotidien par catégorie : loyer, nourriture, transport, santé... Définissez un budget mensuel et recevez des alertes." data-en="Track your daily expenses by category: rent, food, transport, health... Set a monthly budget and receive alerts.">Suivez vos dépenses du quotidien par catégorie. Définissez un budget mensuel et recevez des alertes.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🔄</div>
+      <h3 data-fr="Deux modes" data-en="Two modes">Deux modes</h3>
+      <p data-fr="Passez facilement du mode Business au mode Personnel. Le même numéro WhatsApp pour gérer votre commerce ET votre budget perso." data-en="Easily switch between Business and Personal mode. The same WhatsApp number to manage your business AND your personal budget.">Passez du mode Business au mode Personnel en un message.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🔒</div>
+      <h3 data-fr="Sécurité PIN" data-en="PIN security">Sécurité PIN</h3>
+      <p data-fr="Votre compte est protégé par un code PIN et une question secrète. Accès au panel client via navigateur." data-en="Your account is protected by a PIN code and a secret question. Access the client panel via browser.">Compte protégé par PIN et question secrète.</p>
+    </div>
   </div>
 </section>
 
@@ -165,11 +201,75 @@
     </div>
     <div class="step">
       <div class="num">2</div>
-      <p data-fr="L'assistant comprend et enregistre l'opération automatiquement" data-en="The assistant understands and records the operation automatically">L'assistant comprend et enregistre l'opération automatiquement</p>
+      <p data-fr="Choisis ton mode : Business pour ton commerce, Personnel pour ton budget" data-en="Choose your mode: Business for your shop, Personal for your budget">Choisis ton mode : Business ou Personnel</p>
     </div>
     <div class="step">
       <div class="num">3</div>
-      <p data-fr="Tu reçois une confirmation immédiate et tes bilans en temps réel" data-en="You receive immediate confirmation and real-time reports">Tu reçois une confirmation immédiate et tes bilans en temps réel</p>
+      <p data-fr="Enregistre tes transactions en langage naturel : 'vt 50000 riz' ou 'loyer 150000'" data-en="Record transactions in natural language: 'vt 50000 rice' or 'rent 150000'">Enregistre en langage naturel : 'vt 50000 riz' ou 'loyer 150000'</p>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <p data-fr="Consulte ton bilan à tout moment et reçois des rapports automatiques chaque semaine" data-en="Check your balance anytime and receive automatic reports every week">Consulte ton bilan et reçois des rapports automatiques</p>
+    </div>
+  </div>
+</section>
+
+<section id="exemples" class="exemples">
+  <h2 data-fr="Exemples d'utilisation" data-en="Usage examples">Exemples d'utilisation</h2>
+  <p class="sub" data-fr="Voyez comment Bilan Pro s'adapte à votre usage" data-en="See how Bilan Pro adapts to your needs">Voyez comment Bilan Pro s'adapte à votre usage</p>
+
+  <div class="exemples-tabs">
+    <button class="active" onclick="showExemple('business')" data-fr="💼 Mode Business" data-en="💼 Business Mode">💼 Mode Business</button>
+    <button onclick="showExemple('perso')" data-fr="🏠 Mode Personnel" data-en="🏠 Personal Mode">🏠 Mode Personnel</button>
+  </div>
+
+  <div id="exemple-business" class="exemples-content active">
+    <div class="wa-screen">
+      <div class="wa-header"><div class="wa-avatar">🤖</div><span>Bilan Pro</span></div>
+      <div class="bubble sent"><div class="bubble-text">vt 85000 riz</div><div class="bubble-time">08:12</div></div>
+      <div class="bubble received"><div class="bubble-text">✅ Enregistré : vente de 85 000
+— riz</div><div class="bubble-time">08:12</div></div>
+      <div class="bubble sent"><div class="bubble-text">cr Mamadou 50000</div><div class="bubble-time">09:45</div></div>
+      <div class="bubble received"><div class="bubble-text">📋 Enregistré : credit de 50 000
+(client: Mamadou)</div><div class="bubble-time">09:45</div></div>
+      <div class="bubble sent"><div class="bubble-text">bl</div><div class="bubble-time">17:00</div></div>
+      <div class="bubble received"><div class="bubble-text">Bilan du jour :
+Ventes : 85 000
+Dépenses : 0
+Bénéfice : 85 000
+Crédits accordés : 50 000</div><div class="bubble-time">17:00</div></div>
+      <div class="bubble sent"><div class="bubble-text">lc</div><div class="bubble-time">17:01</div></div>
+      <div class="bubble received"><div class="bubble-text">Crédits en cours :
+- Mamadou : 50 000</div><div class="bubble-time">17:01</div></div>
+    </div>
+  </div>
+
+  <div id="exemple-perso" class="exemples-content">
+    <div class="wa-screen">
+      <div class="wa-header"><div class="wa-avatar">🤖</div><span>Bilan Pro</span></div>
+      <div class="bubble sent"><div class="bubble-text">mode perso</div><div class="bubble-time">08:00</div></div>
+      <div class="bubble received"><div class="bubble-text">🏠 Mode personnel activé.
+Exemples :
+- loyer 150000
+- courses 30000 marché
+- transport 5000 taxi</div><div class="bubble-time">08:00</div></div>
+      <div class="bubble sent"><div class="bubble-text">loyer 200000</div><div class="bubble-time">08:05</div></div>
+      <div class="bubble received"><div class="bubble-text">🏠 Dépense perso enregistrée :
+Loyer : 200 000
+Catégorie : loyer</div><div class="bubble-time">08:05</div></div>
+      <div class="bubble sent"><div class="bubble-text">courses 45000 marché</div><div class="bubble-time">10:30</div></div>
+      <div class="bubble received"><div class="bubble-text">🛒 Dépense perso enregistrée :
+Nourriture : 45 000 - marché
+Catégorie : nourriture
+
+⚠️ Attention : 55 000 restant sur ton budget.</div><div class="bubble-time">10:30</div></div>
+      <div class="bubble sent"><div class="bubble-text">bl mois</div><div class="bubble-time">18:00</div></div>
+      <div class="bubble received"><div class="bubble-text">Bilan perso du mois :
+🏠 Loyer : 200 000
+🛒 Nourriture : 45 000
+───────────────────
+Total dépensé : 245 000
+Budget restant : 55 000</div><div class="bubble-time">18:00</div></div>
     </div>
   </div>
 </section>
@@ -288,6 +388,13 @@
 </footer>
 
 <script>
+  function showExemple(mode) {
+    document.querySelectorAll('.exemples-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.exemples-tabs button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('exemple-' + mode).classList.add('active');
+    event.target.classList.add('active');
+  }
+
   function toggleFaq(el) {
     el.classList.toggle('open');
     const answer = el.nextElementSibling;
