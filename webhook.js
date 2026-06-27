@@ -27,7 +27,7 @@ const twilioClient = twilio(
 );
 
 // Dashboard admin
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanwa2026";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanpro2026";
 
 app.get("/admin", (req, res) => {
   const auth = req.headers.authorization;

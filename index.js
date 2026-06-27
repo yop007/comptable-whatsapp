@@ -153,7 +153,7 @@ export async function processMessage(telephone, message) {
 
   if (isNew) {
     pendingPins[telephone] = { step: "create" };
-    return "Bienvenue sur Bilan WA !\n\nPour securiser ton compte, cree un code PIN a 4 chiffres.\nCe code te permettra de recuperer ton compte si tu changes de numero.\n\nEnvoie ton PIN a 4 chiffres :";
+    return "Bienvenue sur Bilan Pro !\n\nPour securiser ton compte, cree un code PIN a 4 chiffres.\nCe code te permettra de recuperer ton compte si tu changes de numero.\n\nEnvoie ton PIN a 4 chiffres :";
   }
 
   if (!user.pin_confirme && !pendingPins[telephone]) {
