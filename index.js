@@ -35,16 +35,29 @@ Regles importantes :
 - "annuler", "supprimer", "erreur", "annule" = annuler
 - "oui", "yes", "confirmer" = confirmer
 - "non", "no", "annuler" = refuser
+- "mode perso", "perso", "maison", "personnel" = mode_perso
+- "mode business", "business", "boutique", "commerce" = mode_business
+- "mon mode", "quel mode", "mode actif" = voir_mode
+- "loyer", "logement", "louer" = budget_depense, categorie: loyer
+- "nourriture", "courses", "marche", "alimentation", "manger", "repas" = budget_depense, categorie: nourriture
+- "transport", "taxi", "carburant", "essence", "bus" = budget_depense, categorie: transport
+- "sante", "medecin", "medicaments", "pharmacie", "hopital", "clinique" = budget_depense, categorie: sante
+- "eau", "electricite", "facture", "internet", "telephone" = budget_depense, categorie: factures
+- "ecole", "scolarite", "frais scolaires", "universite" = budget_depense, categorie: education
+- "habit", "vetements", "fringues", "chaussures" = budget_depense, categorie: vetements
+- "loisirs", "sortie", "cinema", "restaurant", "vacances" = budget_depense, categorie: loisirs
+
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
   "client": string | null,
-  "periode": "jour" | "mois" | null
+  "periode": "jour" | "mois" | null,
+  "categorie": string | null
 }
 Aucun texte avant ou apres le JSON.`;
 
@@ -337,12 +350,61 @@ export async function processMessage(telephone, message) {
     return "Question secrete : " + user.question_secrete + "\n\nQuelle est ta reponse ?";
   }
 
+  if (extracted.type === "mode_perso") {
+    await supabase.from("utilisateurs").update({ mode_actif: "perso" }).eq("telephone", telephone);
+    return "Mode personnel active. Tes prochaines entrees seront enregistrees comme depenses personnelles.\n\nExemples :\n- loyer 150000\n- courses 30000 marche\n- transport 5000 taxi\n\nTape \"mode business\" pour revenir au mode professionnel.";
+  }
+
+  if (extracted.type === "mode_business") {
+    await supabase.from("utilisateurs").update({ mode_actif: "business" }).eq("telephone", telephone);
+    return "Mode business active. Tes prochaines entrees seront enregistrees comme transactions professionnelles.\n\nTape \"mode perso\" pour passer au mode personnel.";
+  }
+
+  if (extracted.type === "voir_mode") {
+    const mode = user.mode_actif || "business";
+    return "Mode actif : " + (mode === "perso" ? "Personnel" : "Business") + "\n\nTape \"mode perso\" ou \"mode business\" pour changer.";
+  }
+
+  if (extracted.type === "budget_depense") {
+    if (!extracted.montant) return "Montant manquant. Exemple : loyer 150000";
+    const categorie = extracted.categorie || "autre";
+    const emojis = { loyer: "🏠", nourriture: "🛒", transport: "🚗", sante: "💊", factures: "💡", education: "🎓", vetements: "👕", loisirs: "🎉", autre: "📦" };
+    const emoji = emojis[categorie] || "📦";
+    await supabase.from("transactions").insert({
+      utilisateur_id: user.id,
+      type: "depense",
+      montant: extracted.montant,
+      description: extracted.description || categorie,
+      categorie: categorie
+    });
+    return emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "");
+  }
+
   if (extracted.type === "inconnu") {
     return "Je n ai pas compris. Exemples :\n- Vente 500000 GNF riz\n- Depense 100000 GNF transport\n- Credit Mamadou 300000 GNF";
   }
 
   if (extracted.type === "aide") {
-    return "Commandes Bilan Pro :\n\n" +
+    const mode = user.mode_actif || "business";
+    if (mode === "perso") {
+      return "Commandes Bilan Pro 🏠 Mode Personnel :\n\n" +
+        "DEPENSES :\n" +
+        "loyer 150000        = Loyer\n" +
+        "courses 30000 marche = Nourriture\n" +
+        "transport 5000 taxi  = Transport\n" +
+        "medicaments 8000    = Sante\n" +
+        "electricite 25000   = Factures\n" +
+        "ecole 50000         = Education\n\n" +
+        "CONSULTER :\n" +
+        "bl            = Bilan du jour\n" +
+        "bl mois       = Bilan du mois\n\n" +
+        "AUTRES :\n" +
+        "mode business = Passer en mode business\n" +
+        "mon mode      = Voir le mode actif\n" +
+        "annuler       = Annuler la derniere operation\n" +
+        "aide          = Afficher ce menu";
+    }
+    return "Commandes Bilan Pro 💼 Mode Business :\n\n" +
       "ENREGISTRER :\n" +
       "vt 50000 riz       = Vente\n" +
       "dp 10000 transport = Depense\n" +
@@ -354,6 +416,7 @@ export async function processMessage(telephone, message) {
       "lc            = Liste des credits\n" +
       "Combien X me doit ?\n\n" +
       "AUTRES :\n" +
+      "mode perso    = Passer en mode personnel\n" +
       "annuler       = Annuler la derniere operation\n" +
       "pin oublie    = Recuperer ton PIN\n" +
       "aide          = Afficher ce menu";
