@@ -94,6 +94,75 @@
     </table>
   </div>
 
+  <div class="section" style="margin-top:1rem;">
+    <h2>💳 Abonnements</h2>
+    <div class="filters">
+      <select id="abo-filter-tier" onchange="loadAbonnements()">
+        <option value="">Tous les tiers</option>
+        <option value="gratuit">Gratuit</option>
+        <option value="pro">Pro</option>
+        <option value="business">Business</option>
+      </select>
+      <select id="abo-filter-statut" onchange="loadAbonnements()">
+        <option value="">Tous les statuts</option>
+        <option value="actif">Actif</option>
+        <option value="expire">Expiré</option>
+      </select>
+    </div>
+    <div class="count" id="abo-count"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Téléphone</th>
+          <th>Tier</th>
+          <th>Durée</th>
+          <th>Date fin</th>
+          <th>Statut</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="abo-tbody">
+        <tr><td colspan="7" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL ABONNEMENT -->
+  <div id="abo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999;">
+    <div style="background:white;border-radius:12px;padding:2rem;width:420px;max-width:90vw;">
+      <h3 style="margin-bottom:1.5rem;color:#085041;">✏️ Modifier l'abonnement</h3>
+      <input type="hidden" id="abo-user-id">
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:13px;color:#555;margin-bottom:4px;">Utilisateur</div>
+        <div id="abo-modal-nom" style="font-weight:600;"></div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Tier</label>
+        <select id="abo-tier" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+          <option value="gratuit">Gratuit</option>
+          <option value="pro">Pro</option>
+          <option value="business">Business</option>
+        </select>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Durée</label>
+        <select id="abo-duree" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+          <option value="mensuel">Mensuel</option>
+          <option value="annuel">Annuel</option>
+        </select>
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Date de début</label>
+        <input type="date" id="abo-date-debut" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('abo-modal').style.display='none'" style="padding:10px 20px;border:1px solid #ddd;border-radius:8px;cursor:pointer;background:white;">Annuler</button>
+        <button onclick="saveAbonnement()" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allTransactions = [];
 
@@ -212,6 +281,67 @@ function download(filename, content, type) {
   a.click();
   URL.revokeObjectURL(url);
 }
+    async function loadAbonnements() {
+      const tier = document.getElementById('abo-filter-tier').value;
+      const statut = document.getElementById('abo-filter-statut').value;
+      const tbody = document.getElementById('abo-tbody');
+      tbody.innerHTML = '<tr><td colspan="7" class="loading">Chargement...</td></tr>';
+      try {
+        const params = new URLSearchParams();
+        if (tier) params.append('tier', tier);
+        if (statut) params.append('statut', statut);
+        const res = await fetch('/admin/abonnements?' + params.toString());
+        const data = await res.json();
+        document.getElementById('abo-count').textContent = data.length + ' utilisateur(s)';
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">Aucun resultat</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map(u => {
+          const exp = u.date_fin ? new Date(u.date_fin).toLocaleDateString('fr-FR') : '—';
+          const actif = u.actif && (!u.date_fin || new Date(u.date_fin) > new Date());
+          const statutBadge = actif ? '<span class="badge vente">Actif</span>' : '<span class="badge depense">Expiré</span>';
+          const tierBadge = { gratuit: '<span class="badge" style="background:#f0f0f0;color:#555;">Gratuit</span>', pro: '<span class="badge" style="background:#e1f0ff;color:#1a73e8;">Pro</span>', business: '<span class="badge" style="background:#f3e8ff;color:#7c3aed;">Business</span>' }[u.tier] || u.tier;
+          return '<tr><td>' + (u.nom || '—') + '</td><td>' + u.telephone + '</td><td>' + tierBadge + '</td><td>' + (u.duree || 'mensuel') + '</td><td>' + exp + '</td><td>' + statutBadge + '</td><td><button onclick="openAboModal(\'' + u.utilisateur_id + '\',\'' + (u.nom||'') + '\',\'' + u.tier + '\',\'' + (u.duree||'mensuel') + '\',\'' + (u.date_debut||'') + '\')" style="padding:5px 12px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">Modifier</button></td></tr>';
+        }).join('');
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">Erreur de chargement</td></tr>';
+      }
+    }
+
+    function openAboModal(userId, nom, tier, duree, dateDebut) {
+      document.getElementById('abo-user-id').value = userId;
+      document.getElementById('abo-modal-nom').textContent = nom || 'Utilisateur';
+      document.getElementById('abo-tier').value = tier || 'gratuit';
+      document.getElementById('abo-duree').value = duree || 'mensuel';
+      document.getElementById('abo-date-debut').value = dateDebut ? dateDebut.split('T')[0] : new Date().toISOString().split('T')[0];
+      document.getElementById('abo-modal').style.display = 'flex';
+    }
+
+    async function saveAbonnement() {
+      const userId = document.getElementById('abo-user-id').value;
+      const tier = document.getElementById('abo-tier').value;
+      const duree = document.getElementById('abo-duree').value;
+      const dateDebut = document.getElementById('abo-date-debut').value;
+      const dateFin = new Date(dateDebut);
+      dateFin.setMonth(dateFin.getMonth() + (duree === 'annuel' ? 12 : 1));
+      try {
+        const res = await fetch('/admin/abonnements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ utilisateur_id: userId, tier, duree, date_debut: dateDebut, date_fin: dateFin.toISOString() })
+        });
+        if (res.ok) {
+          document.getElementById('abo-modal').style.display = 'none';
+          loadAbonnements();
+        } else {
+          alert('Erreur lors de la sauvegarde.');
+        }
+      } catch(e) {
+        alert('Erreur technique.');
+      }
+    }
+
     function deconnexion() {
       // Force la deconnexion en envoyant de mauvaises credentials
       fetch('/admin', {
@@ -222,6 +352,7 @@ function download(filename, content, type) {
     }
 
     loadData();
+    loadAbonnements();
     setInterval(loadData, 30000);
   </script>
 </body>

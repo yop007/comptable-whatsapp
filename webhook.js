@@ -263,6 +263,49 @@ cron.schedule("0 7 1 * *", async () => {
   }
 });
 
+app.get("/admin/abonnements", async (req, res) => {
+  const tier = req.query.tier;
+  const statut = req.query.statut;
+
+  let query = supabase
+    .from("abonnements")
+    .select("*, utilisateurs(telephone, nom)")
+    .order("created_at", { ascending: false });
+
+  if (tier) query = query.eq("tier", tier);
+
+  const { data, error } = await query;
+  if (error) return res.status(500).json({ error: error.message });
+
+  let result = (data || []).map(a => ({
+    utilisateur_id: a.utilisateur_id,
+    nom: a.utilisateurs?.nom || "—",
+    telephone: a.utilisateurs?.telephone || "—",
+    tier: a.tier,
+    duree: a.duree,
+    date_debut: a.date_debut,
+    date_fin: a.date_fin,
+    actif: a.actif
+  }));
+
+  if (statut === "actif") result = result.filter(u => u.actif && (!u.date_fin || new Date(u.date_fin) > new Date()));
+  if (statut === "expire") result = result.filter(u => !u.actif || (u.date_fin && new Date(u.date_fin) <= new Date()));
+
+  res.json(result);
+});
+
+app.post("/admin/abonnements", async (req, res) => {
+  const { utilisateur_id, tier, duree, date_debut, date_fin } = req.body;
+  if (!utilisateur_id || !tier) return res.status(400).json({ error: "Champs manquants" });
+
+  const { error } = await supabase
+    .from("abonnements")
+    .upsert({ utilisateur_id, tier, duree, date_debut, date_fin, actif: true }, { onConflict: "utilisateur_id" });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
 // Panel client
 app.get("/client", (req, res) => {
   res.sendFile(join(__dirname, "client.html"));
