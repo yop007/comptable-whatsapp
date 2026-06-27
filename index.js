@@ -12,6 +12,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 });
 const pendingCancellations = {};
 const pendingPins = {};
+const pendingPinRecovery = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants en Guinee.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -34,10 +35,11 @@ Regles importantes :
 - "annuler", "supprimer", "erreur", "annule" = annuler
 - "oui", "yes", "confirmer" = confirmer
 - "non", "no", "annuler" = refuser
+- "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -218,6 +220,18 @@ export async function processMessage(telephone, message) {
     return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !";
   }
 
+  if (pendingPinRecovery[telephone]?.step === "reponse") {
+    const reponse = message.trim().toLowerCase();
+    if (reponse === pendingPinRecovery[telephone].reponse_secrete) {
+      const pin = pendingPinRecovery[telephone].pin;
+      delete pendingPinRecovery[telephone];
+      return "Bonne reponse !\n\nTon PIN est : " + pin + "\n\nPense a le noter dans un endroit sur.";
+    } else {
+      delete pendingPinRecovery[telephone];
+      return "Reponse incorrecte. Si tu as oublie ta reponse secrete, contacte le support.";
+    }
+  }
+
   const extracted = await extractTransaction(message);
 
   if (extracted.type === "bilan") {
@@ -302,6 +316,18 @@ export async function processMessage(telephone, message) {
   if (extracted.type === "refuser") {
     delete pendingCancellations[user.telephone];
     return "Suppression annulee. Transaction conservee.";
+  }
+
+  if (extracted.type === "pin_oublie") {
+    if (!user.question_secrete) {
+      return "Tu n as pas de question secrete configuree. Contacte le support.";
+    }
+    pendingPinRecovery[telephone] = {
+      step: "reponse",
+      pin: user.pin,
+      reponse_secrete: user.reponse_secrete
+    };
+    return "Question secrete : " + user.question_secrete + "\n\nQuelle est ta reponse ?";
   }
 
   if (extracted.type === "inconnu") {
