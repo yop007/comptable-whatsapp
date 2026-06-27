@@ -60,40 +60,6 @@
     </div>
   </div>
 
-  <div class="section">
-    <h2>Dernières transactions</h2>
-    <div class="filters">
-      <input type="text" id="filter-telephone" placeholder="🔍 Téléphone..." oninput="applyFilters()">
-      <input type="text" id="filter-client" placeholder="🔍 Client..." oninput="applyFilters()">
-      <select id="filter-type" onchange="applyFilters()">
-        <option value="">Tous les types</option>
-        <option value="vente">Vente</option>
-        <option value="depense">Dépense</option>
-        <option value="credit">Crédit</option>
-        <option value="remboursement">Remboursement</option>
-      </select>
-      <button class="reset" onclick="resetFilters()">Réinitialiser</button>
-      <button onclick="exportCSV()">⬇ Export CSV</button>
-      <button onclick="exportTXT()">⬇ Export TXT</button>
-    </div>
-    <div class="count" id="result-count"></div>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Téléphone</th>
-          <th>Type</th>
-          <th>Montant</th>
-          <th>Description</th>
-          <th>Client</th>
-        </tr>
-      </thead>
-      <tbody id="transactions-body">
-        <tr><td colspan="6" class="loading">Chargement...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
   <div class="section" style="margin-top:1rem;">
     <h2>💳 Abonnements</h2>
     <div class="filters">
@@ -124,6 +90,40 @@
       </thead>
       <tbody id="abo-tbody">
         <tr><td colspan="7" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Dernières transactions</h2>
+    <div class="filters">
+      <input type="text" id="filter-telephone" placeholder="🔍 Téléphone..." oninput="applyFilters()">
+      <input type="text" id="filter-client" placeholder="🔍 Client..." oninput="applyFilters()">
+      <select id="filter-type" onchange="applyFilters()">
+        <option value="">Tous les types</option>
+        <option value="vente">Vente</option>
+        <option value="depense">Dépense</option>
+        <option value="credit">Crédit</option>
+        <option value="remboursement">Remboursement</option>
+      </select>
+      <button class="reset" onclick="resetFilters()">Réinitialiser</button>
+      <button onclick="exportCSV()">⬇ Export CSV</button>
+      <button onclick="exportTXT()">⬇ Export TXT</button>
+    </div>
+    <div class="count" id="result-count"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Téléphone</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Description</th>
+          <th>Client</th>
+        </tr>
+      </thead>
+      <tbody id="transactions-body">
+        <tr><td colspan="6" class="loading">Chargement...</td></tr>
       </tbody>
     </table>
   </div>
