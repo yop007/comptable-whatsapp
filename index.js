@@ -354,10 +354,17 @@ export async function processMessage(telephone, message) {
     }
   }
 
+  // Bloquer credit et remboursement en mode perso
+  if (user.mode_actif === "perso" && (extracted.type === "credit" || extracted.type === "remboursement")) {
+    return "⚠️ Les crédits clients ne sont pas disponibles en mode personnel.\n\nTape 'mode business' pour revenir au mode business.";
+  }
+
   if (extracted.type === "bilan") {
     if (user.mode_actif === "perso") {
       const from = new Date();
-      if (extracted.periode === "mois") from.setDate(1);
+      if (extracted.periode === "mois") {
+        from.setDate(1);
+      }
       from.setHours(0, 0, 0, 0);
 
       const { data } = await supabase
