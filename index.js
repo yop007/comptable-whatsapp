@@ -333,7 +333,7 @@ export async function processMessage(telephone, message) {
 
   // Restrictions tier gratuit
   if (tier === "gratuit") {
-    if (extracted.type === "mode_perso" || extracted.type === "mode_business" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+    if (extracted.type === "mode_perso" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
       return "⚠️ Cette fonctionnalité est disponible a partir du plan Business.\n\nContacte le support pour upgrader ton compte.";
     }
     if (extracted.type === "historique") {
@@ -349,7 +349,7 @@ export async function processMessage(telephone, message) {
 
   // Restrictions tier pro
   if (tier === "pro") {
-    if (extracted.type === "mode_perso" || extracted.type === "mode_business" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+    if (extracted.type === "mode_perso" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
       return "⚠️ Cette fonctionnalité est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
     }
   }
