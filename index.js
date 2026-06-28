@@ -473,7 +473,9 @@ export async function processMessage(telephone, message) {
 
   if (extracted.type === "changer_numero") {
     pendingNumberChange[telephone] = { step: "ancien_numero" };
-    return "Pour transferer votre compte, entrez votre ancien numero de telephone (avec indicatif, ex: +224612345678) :";
+    const prefixe = telephone.replace("whatsapp:", "").substring(0, 4);
+    const exemple = prefixe + "XXXXXXXX";
+    return "Pour transferer votre compte, entrez votre ancien numero de telephone (avec indicatif, ex: " + exemple + ") :";
   }
 
   if (extracted.type === "pin_oublie") {
