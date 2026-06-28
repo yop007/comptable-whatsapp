@@ -250,7 +250,7 @@ export async function processMessage(telephone, message) {
       })
       .eq("telephone", telephone);
     delete pendingPins[telephone];
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !\nTape \"aide\" ou \"?\" pour voir la liste des commandes.";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
