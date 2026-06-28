@@ -127,7 +127,9 @@
       <button class="reset" onclick="resetFilters()">Réinitialiser</button>
       <button onclick="exportCSV()">⬇ Export CSV</button>
       <button onclick="exportTXT()">⬇ Export TXT</button>
-      <button onclick="document.getElementById('broadcast-modal').style.display='flex'" style="background:#e67e22;">📢 Broadcast</button>
+      <div style="margin-left:auto;">
+        <button onclick="document.getElementById('broadcast-modal').style.display='flex'" style="background:#e67e22;">📢 Envoyer un message groupé</button>
+      </div>
     </div>
     <div class="count" id="result-count"></div>
     <table>
