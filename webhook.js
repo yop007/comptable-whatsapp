@@ -26,7 +26,7 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-// Dashboard admin
+const TWILIO_FROM = "whatsapp:+15344449308";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanpro2026";
 
 app.get("/admin", (req, res) => {
@@ -204,7 +204,7 @@ cron.schedule("0 8 * * *", async () => {
 
     try {
       await twilioClient.messages.create({
-        from: "whatsapp:+14155238886",
+        from: TWILIO_FROM,
         to: user.telephone,
         body: message,
       });
@@ -246,7 +246,7 @@ cron.schedule("0 7 * * 1", async () => {
 
     try {
       await twilioClient.messages.create({
-        from: "whatsapp:+14155238886",
+        from: TWILIO_FROM,
         to: user.telephone,
         body: message,
       });
@@ -290,7 +290,7 @@ cron.schedule("0 7 1 * *", async () => {
 
     try {
       await twilioClient.messages.create({
-        from: "whatsapp:+14155238886",
+        from: TWILIO_FROM,
         to: user.telephone,
         body: message,
       });
@@ -367,7 +367,7 @@ app.post("/admin/broadcast", async (req, res) => {
   let success = 0, errors = 0;
   for (const user of utilisateurs) {
     try {
-      await twilioClient.messages.create({ from: "whatsapp:+14155238886", to: user.telephone, body: message });
+      await twilioClient.messages.create({ from: TWILIO_FROM, to: user.telephone, body: message });
       success++;
     } catch (err) {
       console.error("Erreur broadcast " + user.telephone + ":", err.message);
