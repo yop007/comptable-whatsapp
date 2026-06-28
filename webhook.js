@@ -90,6 +90,42 @@ app.get("/admin/data", async (req, res) => {
     telephone: t.utilisateurs?.telephone || "-"
   }));
 
+  const PAYS = {
+    "+224": "Guinée",
+    "+237": "Cameroun",
+    "+221": "Sénégal",
+    "+225": "Côte d'Ivoire",
+    "+223": "Mali",
+    "+226": "Burkina Faso",
+    "+228": "Togo",
+    "+229": "Bénin",
+    "+227": "Niger",
+    "+222": "Mauritanie",
+    "+41": "Suisse",
+    "+33": "France",
+    "+32": "Belgique",
+    "+1": "USA/Canada"
+  };
+
+  const parPays = {};
+  for (const user of (users || [])) {
+    const tel = user.telephone.replace("whatsapp:", "");
+    let pays = "Autre";
+    for (const [prefix, nom] of Object.entries(PAYS)) {
+      if (tel.startsWith(prefix)) { pays = nom; break; }
+    }
+    parPays[pays] = (parPays[pays] || 0) + 1;
+  }
+
+  const usersWithDates = (users || [])
+    .filter(u => u.created_at)
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const inscriptions = usersWithDates.reduce((acc, user, i) => {
+    const date = new Date(user.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    acc.push({ date, cumul: i + 1 });
+    return acc;
+  }, []);
+
   res.json({
     stats: {
       users: (users || []).length,
@@ -97,7 +133,9 @@ app.get("/admin/data", async (req, res) => {
       ventesToday,
       creditsEnCours
     },
-    transactions: formatted
+    transactions: formatted,
+    inscriptions,
+    parPays
   });
 });
 
