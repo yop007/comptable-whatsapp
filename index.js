@@ -169,6 +169,18 @@ async function getSoldeClient(userId, client) {
   return credits - remboursements;
 }
 
+async function getTier(userId) {
+  const { data } = await supabase
+    .from("abonnements")
+    .select("tier, actif, date_fin")
+    .eq("utilisateur_id", userId)
+    .single();
+
+  if (!data || !data.actif) return "gratuit";
+  if (data.date_fin && new Date(data.date_fin) < new Date()) return "gratuit";
+  return data.tier || "gratuit";
+}
+
 export async function processMessage(telephone, message) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
@@ -258,6 +270,8 @@ export async function processMessage(telephone, message) {
     }
   }
 
+  const tier = await getTier(user.id);
+
   // Gestion choix annulation en attente
   if (pendingCancellations[user.telephone]?.step === "choix") {
     const choix = parseInt(message.trim());
@@ -316,6 +330,29 @@ export async function processMessage(telephone, message) {
   }
 
   const extracted = await extractTransaction(message, user.mode_actif || "business");
+
+  // Restrictions tier gratuit
+  if (tier === "gratuit") {
+    if (extracted.type === "mode_perso" || extracted.type === "mode_business" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+      return "⚠️ Cette fonctionnalité est disponible a partir du plan Business.\n\nContacte le support pour upgrader ton compte.";
+    }
+    if (extracted.type === "historique") {
+      return "⚠️ L'historique complet est disponible a partir du plan Pro.\n\nContacte le support pour upgrader ton compte.";
+    }
+    // Limite 50 transactions/mois
+    const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
+    const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("utilisateur_id", user.id).gte("created_at", debutMois.toISOString());
+    if (count >= 50 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
+      return "⚠️ Tu as atteint la limite de 50 transactions/mois du plan Gratuit.\n\nContacte le support pour upgrader ton compte.";
+    }
+  }
+
+  // Restrictions tier pro
+  if (tier === "pro") {
+    if (extracted.type === "mode_perso" || extracted.type === "mode_business" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+      return "⚠️ Cette fonctionnalité est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
+    }
+  }
 
   if (extracted.type === "bilan") {
     if (user.mode_actif === "perso") {
