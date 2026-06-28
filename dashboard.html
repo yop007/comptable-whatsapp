@@ -61,6 +61,20 @@
   </div>
 
   <div class="section" style="margin-top:1rem;">
+    <h2>📊 Statistiques des transactions</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+      <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Répartition par type</div>
+        <canvas id="chart-types" height="200"></canvas>
+      </div>
+      <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Inscriptions cumulées</div>
+        <canvas id="chart-inscriptions" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:1rem;">
     <h2>💳 Abonnements</h2>
     <div class="filters">
       <select id="abo-filter-tier" onchange="loadAbonnements()">
@@ -163,8 +177,11 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script>
     let allTransactions = [];
+    let chartTypes = null;
+    let chartInscriptions = null;
 
     async function loadData() {
       const res = await fetch('/admin/data');
@@ -178,6 +195,59 @@
 
       allTransactions = data.transactions;
       applyFilters();
+      renderCharts(data);
+    }
+
+    function renderCharts(data) {
+      // Graphique répartition par type
+      const types = ['vente', 'depense', 'credit', 'remboursement'];
+      const counts = types.map(t => data.transactions.filter(tx => tx.type === t).length);
+
+      if (chartTypes) chartTypes.destroy();
+      chartTypes = new Chart(document.getElementById('chart-types'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Ventes', 'Dépenses', 'Crédits', 'Remboursements'],
+          datasets: [{
+            data: counts,
+            backgroundColor: ['#085041', '#e74c3c', '#f39c12', '#3498db'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
+        }
+      });
+
+      // Graphique inscriptions
+      if (chartInscriptions) chartInscriptions.destroy();
+      const labels = (data.inscriptions || []).map(i => i.date);
+      const cumuls = (data.inscriptions || []).map(i => i.cumul);
+
+      chartInscriptions = new Chart(document.getElementById('chart-inscriptions'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Utilisateurs',
+            data: cumuls,
+            borderColor: '#085041',
+            backgroundColor: 'rgba(8,80,65,0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            x: { ticks: { maxTicksLimit: 8 } }
+          }
+        }
+      });
     }
 
     function applyFilters() {
