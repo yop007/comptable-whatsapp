@@ -127,6 +127,7 @@
       <button class="reset" onclick="resetFilters()">Réinitialiser</button>
       <button onclick="exportCSV()">⬇ Export CSV</button>
       <button onclick="exportTXT()">⬇ Export TXT</button>
+      <button onclick="document.getElementById('broadcast-modal').style.display='flex'" style="background:#e67e22;">📢 Broadcast</button>
     </div>
     <div class="count" id="result-count"></div>
     <table>
@@ -179,11 +180,6 @@
         <button onclick="saveAbonnement()" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Enregistrer</button>
       </div>
     </div>
-  </div>
-
-  <!-- BOUTON BROADCAST -->
-  <div class="section" style="margin-bottom:1rem;">
-    <button onclick="document.getElementById('broadcast-modal').style.display='flex'" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">📢 Envoyer un message groupé</button>
   </div>
 
   <!-- MODAL BROADCAST -->
