@@ -65,11 +65,11 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
       <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
         <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Répartition par type</div>
-        <canvas id="chart-types" height="200"></canvas>
+        <div style="position:relative;height:220px;"><canvas id="chart-types"></canvas></div>
       </div>
       <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
         <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Inscriptions cumulées</div>
-        <canvas id="chart-inscriptions" height="200"></canvas>
+        <div style="position:relative;height:220px;"><canvas id="chart-inscriptions"></canvas></div>
       </div>
     </div>
   </div>
@@ -216,6 +216,7 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
         }
       });
@@ -241,6 +242,7 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
             y: { beginAtZero: true, ticks: { stepSize: 1 } },
