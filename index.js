@@ -13,6 +13,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 const pendingCancellations = {};
 const pendingPins = {};
 const pendingPinRecovery = {};
+const pendingNumberChange = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants en Guinee.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -49,11 +50,12 @@ Regles importantes :
 
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "budget", "definir budget", "mon budget", "fixer budget" = budget_definir
+- "changer numero", "nouveau numero", "changer mon numero" = changer_numero
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -272,6 +274,47 @@ export async function processMessage(telephone, message) {
       "\n\nReponds oui pour supprimer ou non pour annuler.";
   }
 
+  // Gestion changement de numero en attente
+  if (pendingNumberChange[telephone]?.step === "ancien_numero") {
+    const ancienNumero = "whatsapp:" + message.trim().replace(/\s/g, "");
+    pendingNumberChange[telephone] = { step: "pin", ancienNumero };
+    return "Entrez le PIN de votre ancien compte :";
+  }
+
+  if (pendingNumberChange[telephone]?.step === "pin") {
+    const { data: ancienUser } = await supabase
+      .from("utilisateurs")
+      .select("*")
+      .eq("telephone", pendingNumberChange[telephone].ancienNumero)
+      .single();
+
+    if (!ancienUser || ancienUser.pin !== message.trim()) {
+      delete pendingNumberChange[telephone];
+      return "Ancien numero ou PIN incorrect. Recommencez avec 'changer numero'.";
+    }
+
+    // Transfert du compte
+    await supabase.from("transactions")
+      .update({ utilisateur_id: user.id })
+      .eq("utilisateur_id", ancienUser.id);
+
+    await supabase.from("utilisateurs")
+      .update({
+        pin: ancienUser.pin,
+        pin_confirme: true,
+        question_secrete: ancienUser.question_secrete,
+        reponse_secrete: ancienUser.reponse_secrete,
+        mode_actif: ancienUser.mode_actif,
+        budget_mensuel: ancienUser.budget_mensuel
+      })
+      .eq("telephone", telephone);
+
+    await supabase.from("utilisateurs").delete().eq("id", ancienUser.id);
+
+    delete pendingNumberChange[telephone];
+    return "✅ Compte transfere avec succes !\n\nToutes vos transactions ont ete transferees vers ce nouveau numero.";
+  }
+
   const extracted = await extractTransaction(message, user.mode_actif || "business");
 
   if (extracted.type === "bilan") {
@@ -426,6 +469,11 @@ export async function processMessage(telephone, message) {
   if (extracted.type === "refuser") {
     delete pendingCancellations[user.telephone];
     return "Suppression annulee. Transaction conservee.";
+  }
+
+  if (extracted.type === "changer_numero") {
+    pendingNumberChange[telephone] = { step: "ancien_numero" };
+    return "Pour transferer votre compte, entrez votre ancien numero de telephone (avec indicatif, ex: +224612345678) :";
   }
 
   if (extracted.type === "pin_oublie") {
