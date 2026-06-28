@@ -165,6 +165,7 @@
     <div style="display:flex;gap:10px;margin-bottom:1rem;">
       <button onclick="exportCSV()" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export CSV</button>
       <button onclick="exportTXT()" style="padding:8px 16px;background:#555;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export TXT</button>
+      <button onclick="exportExcel()" style="padding:8px 16px;background:#1d6f42;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export Excel</button>
     </div>
     <table>
       <thead>
@@ -183,6 +184,7 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   let userId = null;
 
@@ -325,6 +327,22 @@
       '-'.repeat(70) + '\n' +
       lignes.join('\n');
     telecharger(txt, 'bilan-pro-transactions.txt', 'text/plain');
+  }
+
+  function exportExcel() {
+    if (!allTransactions.length) return alert('Aucune transaction a exporter.');
+    const data = allTransactions.map(t => ({
+      'Date': new Date(t.created_at).toLocaleDateString('fr-FR'),
+      'Type': t.type,
+      'Montant': t.montant,
+      'Description': t.description || '',
+      'Client': t.client || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    ws['!cols'] = [{wch:12},{wch:14},{wch:12},{wch:25},{wch:20}];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
+    XLSX.writeFile(wb, 'bilan-pro-transactions.xlsx');
   }
 
   function telecharger(contenu, nom, type) {
