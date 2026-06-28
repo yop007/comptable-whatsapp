@@ -344,6 +344,39 @@ app.post("/admin/abonnements", async (req, res) => {
   res.json({ success: true });
 });
 
+app.post("/admin/broadcast", async (req, res) => {
+  const { message, tier } = req.body;
+  if (!message) return res.status(400).json({ error: "Message requis" });
+
+  let utilisateurs;
+  if (tier && tier !== "tous") {
+    const { data: abonnements } = await supabase
+      .from("abonnements")
+      .select("utilisateur_id")
+      .eq("tier", tier)
+      .eq("actif", true);
+    const ids = (abonnements || []).map(a => a.utilisateur_id);
+    if (ids.length === 0) return res.json({ success: 0, errors: 0, total: 0 });
+    const { data } = await supabase.from("utilisateurs").select("telephone").in("id", ids);
+    utilisateurs = data || [];
+  } else {
+    const { data } = await supabase.from("utilisateurs").select("telephone");
+    utilisateurs = data || [];
+  }
+
+  let success = 0, errors = 0;
+  for (const user of utilisateurs) {
+    try {
+      await twilioClient.messages.create({ from: "whatsapp:+14155238886", to: user.telephone, body: message });
+      success++;
+    } catch (err) {
+      console.error("Erreur broadcast " + user.telephone + ":", err.message);
+      errors++;
+    }
+  }
+  res.json({ success, errors, total: utilisateurs.length });
+});
+
 // Panel client
 app.get("/client", (req, res) => {
   res.sendFile(join(__dirname, "client.html"));

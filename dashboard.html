@@ -181,6 +181,33 @@
     </div>
   </div>
 
+  <!-- BOUTON BROADCAST -->
+  <div class="section" style="margin-bottom:1rem;">
+    <button onclick="document.getElementById('broadcast-modal').style.display='flex'" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;">📢 Envoyer un message groupé</button>
+  </div>
+
+  <!-- MODAL BROADCAST -->
+  <div id="broadcast-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999;">
+    <div style="background:white;border-radius:12px;padding:2rem;width:500px;max-width:90vw;">
+      <h3 style="margin-bottom:1rem;color:#085041;">📢 Envoyer un message groupé</h3>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Destinataires</label>
+        <select id="broadcast-tier" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+          <option value="tous">Tous les utilisateurs</option>
+          <option value="gratuit">Tier Gratuit uniquement</option>
+          <option value="pro">Tier Pro uniquement</option>
+          <option value="business">Tier Business uniquement</option>
+        </select>
+      </div>
+      <textarea id="broadcast-text" rows="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;" placeholder="Ecris ton message ici..."></textarea>
+      <div id="broadcast-result" style="margin:10px 0;font-size:13px;color:#555;"></div>
+      <div style="display:flex;gap:10px;margin-top:1rem;justify-content:flex-end;">
+        <button onclick="document.getElementById('broadcast-modal').style.display='none'" style="padding:10px 20px;border:1px solid #ddd;border-radius:8px;cursor:pointer;background:white;">Annuler</button>
+        <button onclick="sendBroadcast()" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Envoyer</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script>
     let allTransactions = [];
@@ -443,6 +470,25 @@ function download(filename, content, type) {
         }
       } catch(e) {
         alert('Erreur technique.');
+      }
+    }
+
+    async function sendBroadcast() {
+      const message = document.getElementById('broadcast-text').value.trim();
+      const tier = document.getElementById('broadcast-tier').value;
+      if (!message) return alert('Ecris un message avant d\'envoyer.');
+      const result = document.getElementById('broadcast-result');
+      result.textContent = '⏳ Envoi en cours...';
+      try {
+        const res = await fetch('/admin/broadcast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, tier })
+        });
+        const data = await res.json();
+        result.textContent = `✅ Envoyé : ${data.success} | ❌ Erreurs : ${data.errors} | Total : ${data.total}`;
+      } catch (err) {
+        result.textContent = '❌ Erreur technique.';
       }
     }
 
