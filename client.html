@@ -159,6 +159,11 @@
         <option value="credit">Credit</option>
         <option value="remboursement">Remboursement</option>
       </select>
+      <select id="filtre-mode" onchange="filtrer()" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;">
+        <option value="">Tous les modes</option>
+        <option value="business">Business</option>
+        <option value="perso">Personnel</option>
+      </select>
       <input type="text" id="filtre-client" oninput="filtrer()" placeholder="Rechercher client..." style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;min-width:160px;">
       <button onclick="resetFiltres()" style="padding:8px 16px;background:#eee;color:#555;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Reinitialiser</button>
     </div>
@@ -259,6 +264,7 @@
     const debut = document.getElementById('filtre-debut').value;
     const fin = document.getElementById('filtre-fin').value;
     const type = document.getElementById('filtre-type').value;
+    const mode = document.getElementById('filtre-mode').value;
     const client = document.getElementById('filtre-client').value.toLowerCase();
 
     const filtered = allTransactions.filter(t => {
@@ -266,6 +272,8 @@
       if (debut && date < new Date(debut)) return false;
       if (fin && date > new Date(fin + 'T23:59:59')) return false;
       if (type && t.type !== type) return false;
+      if (mode === 'perso' && !t.categorie) return false;
+      if (mode === 'business' && t.categorie) return false;
       if (client && !(t.client || '').toLowerCase().includes(client) && !(t.description || '').toLowerCase().includes(client)) return false;
       return true;
     });
@@ -277,6 +285,7 @@
     document.getElementById('filtre-debut').value = '';
     document.getElementById('filtre-fin').value = '';
     document.getElementById('filtre-type').value = '';
+    document.getElementById('filtre-mode').value = '';
     document.getElementById('filtre-client').value = '';
     afficherTransactions(allTransactions);
   }
@@ -289,11 +298,11 @@
     }
     tbody.innerHTML = liste.map(t => `
       <tr>
-        <td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td>
-        <td><span class="badge ${t.type}">${t.type}</span></td>
-        <td>${t.montant.toLocaleString()}</td>
-        <td>${t.description || '—'}</td>
-        <td>${t.client || '—'}</td>
+      <td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td>
+      <td><span class="badge ${t.type}">${t.type}</span></td>
+      <td>${t.montant.toLocaleString()}</td>
+      <td>${t.description || '—'}</td>
+      <td>${t.client || (t.categorie ? '🏠 ' + t.categorie : '—')}</td>
       </tr>
     `).join('');
   }
