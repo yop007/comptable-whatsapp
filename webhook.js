@@ -155,6 +155,68 @@ app.post("/webhook", async (req, res) => {
   res.type("text/xml").send(twiml.toString());
 });
 
+// Rappel abonnement expirant -- chaque jour a 9h
+cron.schedule("0 9 * * *", async () => {
+  console.log("Verification abonnements expirants...");
+
+  const dans3jours = new Date();
+  dans3jours.setDate(dans3jours.getDate() + 3);
+  dans3jours.setHours(23, 59, 59, 999);
+  const demain = new Date();
+  demain.setDate(demain.getDate() + 1);
+  demain.setHours(0, 0, 0, 0);
+
+  // Abonnements qui expirent dans 3 jours
+  const { data: expirantsBientot } = await supabase
+    .from("abonnements")
+    .select("*, utilisateurs(telephone)")
+    .eq("actif", true)
+    .gte("date_fin", demain.toISOString())
+    .lte("date_fin", dans3jours.toISOString());
+
+  for (const abo of (expirantsBientot || [])) {
+    const tel = abo.utilisateurs?.telephone;
+    if (!tel) continue;
+    try {
+      await twilioClient.messages.create({
+        from: TWILIO_FROM,
+        to: tel,
+        body: "Votre periode d'essai Bilan Pro expire dans 3 jours.\n\nPour continuer sans interruption, souscrivez a un abonnement sur www.bilanpro.app\n\nNous restons disponibles pour toute question."
+      });
+      console.log("Rappel abo envoye a " + tel);
+    } catch (err) {
+      console.error("Erreur rappel abo " + tel + ":", err.message);
+    }
+  }
+
+  // Abonnements expires aujourd'hui
+  const debut = new Date(); debut.setHours(0, 0, 0, 0);
+  const fin = new Date(); fin.setHours(23, 59, 59, 999);
+
+  const { data: expiresAujourdhui } = await supabase
+    .from("abonnements")
+    .select("*, utilisateurs(telephone)")
+    .eq("actif", true)
+    .gte("date_fin", debut.toISOString())
+    .lte("date_fin", fin.toISOString());
+
+  for (const abo of (expiresAujourdhui || [])) {
+    const tel = abo.utilisateurs?.telephone;
+    if (!tel) continue;
+    try {
+      await twilioClient.messages.create({
+        from: TWILIO_FROM,
+        to: tel,
+        body: "Votre periode d'essai Bilan Pro a expire aujourd'hui.\n\nVos donnees sont conservees. Pour continuer, souscrivez sur www.bilanpro.app\n\nMerci de votre confiance !"
+      });
+      await supabase.from("abonnements").update({ actif: false }).eq("id", abo.id);
+      console.log("Abo expire pour " + tel);
+    } catch (err) {
+      console.error("Erreur abo expire " + tel + ":", err.message);
+    }
+  }
+});
+
 // Rappels credits -- chaque jour a 8h
 cron.schedule("0 8 * * *", async () => {
   console.log("Lancement rappels credits...");

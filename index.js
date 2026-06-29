@@ -250,6 +250,21 @@ export async function processMessage(telephone, message) {
       })
       .eq("telephone", telephone);
     delete pendingPins[telephone];
+
+    // Creer abonnement gratuit par defaut (2 semaines)
+    const dateDebut = new Date();
+    const dateFin = new Date();
+    dateFin.setDate(dateFin.getDate() + 14);
+
+    await supabase.from("abonnements").insert({
+      utilisateur_id: user.id,
+      tier: "gratuit",
+      duree: "mensuel",
+      date_debut: dateDebut.toISOString(),
+      date_fin: dateFin.toISOString(),
+      actif: true
+    });
+
     return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !\nTape \"aide\" ou \"?\" pour voir la liste des commandes.";
   }
 
