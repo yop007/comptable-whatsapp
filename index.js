@@ -14,6 +14,7 @@ const pendingCancellations = {};
 const pendingPins = {};
 const pendingPinRecovery = {};
 const pendingNumberChange = {};
+const pendingTutorial = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants en Guinee.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -267,7 +268,9 @@ export async function processMessage(telephone, message) {
       actif: true
     });
 
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable et budget sur WhatsApp.\n\nDeux modes disponibles :\n💼 Mode Business (par defaut) — gere ton activite professionnelle\n🏠 Mode Personnel — suis ton budget du foyer\n\nTape \"mode perso\" pour passer au mode personnel a tout moment.\n\nTape \"aide\" pour voir la liste des commandes.";
+    pendingTutorial[telephone] = { step: 1 };
+
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\n\nOn va faire un essai rapide ensemble pour que tu voies comment ca marche. Imagine une journee type de ton activite.\n\nÉTAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
@@ -303,6 +306,52 @@ export async function processMessage(telephone, message) {
       (t.description ? " - " + t.description : "") +
       (t.client ? " (" + t.client + ")" : "") +
       "\n\nReponds oui pour supprimer ou non pour annuler.";
+  }
+
+  // Tutoriel guide apres inscription
+  if (pendingTutorial[telephone]) {
+    const step = pendingTutorial[telephone].step;
+    const texte = message.trim().toLowerCase();
+
+    if (step === 1) {
+      if (texte === "vt 1000 test") {
+        await saveTransaction(user.id, { type: "vente", montant: 1000, description: "test" });
+        pendingTutorial[telephone].step = 2;
+        return "✅ Enregistre : vente de 1,000 - test\n\nC'est exactement comme ca que tu enregistreras tes vraies ventes !\n\nÉTAPE 2/4 — Tu as une depense ?\nTape exactement : dp 500 test";
+      }
+      return "Pour continuer le tutoriel, tape exactement :\nvt 1000 test\n\n(Tu pourras taper \"stop\" pour arreter le tutoriel a tout moment)";
+    }
+
+    if (step === 2) {
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "dp 500 test") {
+        await saveTransaction(user.id, { type: "depense", montant: 500, description: "test" });
+        pendingTutorial[telephone].step = 3;
+        return "✅ Enregistre : depense de 500 - test\n\nMaintenant un credit client !\n\nÉTAPE 3/4 — Un client achete a credit ?\nTape exactement : cr Test 2000";
+      }
+      return "Pour continuer, tape exactement :\ndp 500 test\n\n(ou \"stop\" pour arreter)";
+    }
+
+    if (step === 3) {
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "cr test 2000") {
+        await saveTransaction(user.id, { type: "credit", montant: 2000, client: "Test" });
+        pendingTutorial[telephone].step = 4;
+        return "✅ Enregistre : credit de 2,000 (client: Test)\n\nDernier exemple : voir ton bilan du jour !\n\nÉTAPE 4/4 — Tape exactement : blj";
+      }
+      return "Pour continuer, tape exactement :\ncr Test 2000\n\n(ou \"stop\" pour arreter)";
+    }
+
+    if (step === 4) {
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "blj") {
+        delete pendingTutorial[telephone];
+        const bilan = await getBilan(user.id, "jour");
+        return "Bilan du jour :\nVentes : " + bilan.ventes.toLocaleString() + "\nDepenses : " + bilan.depenses.toLocaleString() + "\nBenefice : " + bilan.benefice.toLocaleString() + "\nCredits accordes : " + bilan.credits.toLocaleString() +
+          "\n\n🎉 Bravo, tu connais l'essentiel !\n\nTu peux maintenant utiliser Bilan Pro pour de vrai. Tape \"aide\" a tout moment pour revoir les commandes.\n\nAstuce : Tape \"mode perso\" si tu veux aussi suivre ton budget personnel (loyer, nourriture, transport...).";
+      }
+      return "Pour terminer, tape exactement :\nblj\n\n(ou \"stop\" pour arreter)";
+    }
   }
 
   // Gestion changement de numero en attente
