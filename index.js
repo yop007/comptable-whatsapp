@@ -31,6 +31,8 @@ Regles importantes :
 - "cr", "credit" = credit
 - "rb", "remb" = remboursement
 - "bl", "bilan" = bilan
+- "blj", "bilan jour" = bilan, periode: jour
+- "blm", "bilan mois" = bilan, periode: mois
 - "qui me doit", "liste des credits", "mes credits", "liste credits", "lc" = credits_liste
 - "aide", "help", "commandes", "?" = aide
 - "annuler", "supprimer", "erreur", "annule" = annuler
@@ -265,7 +267,7 @@ export async function processMessage(telephone, message) {
       actif: true
     });
 
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable.\n\nEnvoie ton premier message pour commencer !\nTape \"aide\" ou \"?\" pour voir la liste des commandes.";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\nJe suis ton assistant comptable et budget sur WhatsApp.\n\nDeux modes disponibles :\n💼 Mode Business (par defaut) — gere ton activite professionnelle\n🏠 Mode Personnel — suis ton budget du foyer\n\nTape \"mode perso\" pour passer au mode personnel a tout moment.\n\nTape \"aide\" pour voir la liste des commandes.";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
@@ -348,7 +350,7 @@ export async function processMessage(telephone, message) {
 
   // Restrictions tier gratuit
   if (tier === "gratuit") {
-    if (extracted.type === "mode_perso" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+    if (extracted.type === "budget_definir" || extracted.type === "budget_depense") {
       return "⚠️ Cette fonctionnalité est disponible a partir du plan Business.\n\nContacte le support pour upgrader ton compte.";
     }
     if (extracted.type === "historique") {
@@ -364,7 +366,7 @@ export async function processMessage(telephone, message) {
 
   // Restrictions tier pro
   if (tier === "pro") {
-    if (extracted.type === "mode_perso" || extracted.type === "budget_definir" || extracted.type === "budget_depense") {
+    if (extracted.type === "budget_definir" || extracted.type === "budget_depense") {
       return "⚠️ Cette fonctionnalité est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
     }
   }
@@ -553,7 +555,7 @@ export async function processMessage(telephone, message) {
 
   if (extracted.type === "mode_perso") {
     await supabase.from("utilisateurs").update({ mode_actif: "perso" }).eq("telephone", telephone);
-    return "Mode personnel active. Tes prochaines entrees seront enregistrees comme depenses personnelles.\n\nExemples :\n- loyer 150000\n- courses 30000 marche\n- transport 5000 taxi\n\nTape \"mode business\" pour revenir au mode professionnel.";
+    return "🏠 Mode personnel active.\n\nTes prochaines entrees seront enregistrees comme depenses personnelles.\n\nTape \"aide\" pour voir les commandes disponibles.";
   }
 
   if (extracted.type === "mode_business") {
@@ -573,12 +575,12 @@ export async function processMessage(telephone, message) {
     }
     // Pas de montant — afficher le budget actuel
     const budget = user.budget_mensuel;
-    if (!budget) return "💰 Aucun budget defini.\n\nPour definir un budget, envoie :\nbudget 500000";
-    return "💰 Ton budget mensuel : " + budget.toLocaleString() + "\n\nEnvoie \"budget 500000\" pour le modifier.";
+    if (!budget) return "💰 Aucun budget defini.\n\nTape \"aide\" pour voir comment definir ton budget.";
+    return "💰 Ton budget mensuel : " + budget.toLocaleString() + "\n\nPour le modifier, tape budget suivi du nouveau montant.";
   }
 
   if (extracted.type === "budget_depense") {
-    if (!extracted.montant) return "Montant manquant. Exemple : loyer 150000";
+    if (!extracted.montant) return "Montant manquant. Tape \"aide\" pour voir comment enregistrer une depense.";
     const categorie = extracted.categorie || "autre";
     const emojis = { loyer: "🏠", nourriture: "🛒", transport: "🚗", sante: "💊", factures: "💡", education: "🎓", vetements: "👕", loisirs: "🎉", autre: "📦" };
     const emoji = emojis[categorie] || "📦";
@@ -609,46 +611,45 @@ export async function processMessage(telephone, message) {
   }
 
   if (extracted.type === "inconnu") {
-    return "Je n ai pas compris. Exemples :\n- Vente 500000 riz\n- Depense 100000 transport\n- Credit Mamadou 300000";
+    return "Je n ai pas compris ta demande.\n\nTape \"aide\" pour voir la liste des commandes disponibles.";
   }
 
   if (extracted.type === "aide") {
     const mode = user.mode_actif || "business";
     if (mode === "perso") {
-      return "Commandes Bilan Pro 🏠 Mode Personnel :\n\n" +
-        "DEPENSES :\n" +
-        "loyer 150000        = Loyer\n" +
-        "courses 30000 marche = Nourriture\n" +
-        "transport 5000 taxi  = Transport\n" +
-        "medicaments 8000    = Sante\n" +
-        "electricite 25000   = Factures\n" +
-        "ecole 50000         = Education\n\n" +
+      return "🏠 COMMANDES MODE PERSONNEL\n\n" +
+        "ENREGISTRER UNE DEPENSE :\n" +
+        "Ecris simplement la categorie suivie du montant\n" +
+        "Categories : loyer, nourriture, transport, sante, factures, education, vetements, loisirs\n\n" +
         "CONSULTER :\n" +
-        "bl            = Bilan du jour\n" +
-        "bl mois       = Bilan du mois\n" +
-      "ht            = 5 dernieres transactions\n\n" +
+        "blj = Bilan du jour\n" +
+        "blm = Bilan du mois\n" +
+        "ht  = Historique (5 dernieres operations)\n\n" +
+        "BUDGET :\n" +
+        "budget = Definir ou voir ton budget mensuel\n\n" +
         "AUTRES :\n" +
-        "mode business = Passer en mode business\n" +
+        "mode business = Passer en mode Business\n" +
         "mon mode      = Voir le mode actif\n" +
-        "annuler       = Annuler la derniere operation\n" +
+        "annuler       = Annuler une operation\n" +
         "aide          = Afficher ce menu";
     }
-    return "Commandes Bilan Pro 💼 Mode Business :\n\n" +
+    return "💼 COMMANDES MODE BUSINESS\n\n" +
       "ENREGISTRER :\n" +
-      "vt 50000 riz       = Vente\n" +
-      "dp 10000 transport = Depense\n" +
-      "cr Mamadou 30000   = Credit\n" +
-      "rb Mamadou 15000   = Remboursement\n\n" +
+      "vt = Vente\n" +
+      "dp = Depense\n" +
+      "cr = Credit (client)\n" +
+      "rb = Remboursement (client)\n\n" +
       "CONSULTER :\n" +
-      "bl            = Bilan du jour\n" +
-      "bl mois       = Bilan du mois\n" +
-      "lc            = Liste des credits\n" +
-      "ht            = 5 dernieres transactions\n" +
-      "Combien X me doit ?\n\n" +
+      "blj = Bilan du jour\n" +
+      "blm = Bilan du mois\n" +
+      "lc  = Liste des credits en cours\n" +
+      "ht  = Historique (5 dernieres operations)\n\n" +
       "AUTRES :\n" +
-      "mode perso    = Passer en mode personnel\n" +
-      "annuler       = Annuler la derniere operation\n" +
+      "mode perso    = Passer en mode Personnel\n" +
+      "mon mode      = Voir le mode actif\n" +
+      "annuler       = Annuler une operation\n" +
       "pin oublie    = Recuperer ton PIN\n" +
+      "changer numero = Transferer ton compte sur un nouveau numero\n" +
       "aide          = Afficher ce menu";
   }
 
