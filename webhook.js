@@ -67,6 +67,15 @@ app.get("/guide", (req, res) => {
   res.sendFile(join(__dirname, "guide.html"));
 });
 
+app.get("/manifest.json", (req, res) => {
+  res.sendFile(join(__dirname, "manifest.json"));
+});
+
+app.get("/sw.js", (req, res) => {
+  res.setHeader("Content-Type", "application/javascript");
+  res.sendFile(join(__dirname, "sw.js"));
+});
+
 app.get("/admin/data", async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

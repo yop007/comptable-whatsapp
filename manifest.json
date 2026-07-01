@@ -1,0 +1,22 @@
+{
+  "name": "Bilan Pro Admin",
+  "short_name": "Bilan Pro",
+  "description": "Dashboard administrateur Bilan Pro",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#085041",
+  "theme_color": "#085041",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
