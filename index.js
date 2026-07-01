@@ -338,7 +338,7 @@ export async function processMessage(telephone, message) {
       if (texte === "cr test 2000") {
         await saveTransaction(user.id, { type: "credit", montant: 2000, client: "Test" });
         pendingTutorial[telephone].step = 4;
-        return "✅ Enregistre : credit de 2,000 (client: Test)\n\nDernier exemple : voir ton bilan du jour !\n\nÉTAPE 4/4 — Tape exactement : blj";
+        return "✅ Enregistre : credit de 2,000 (client: Test)\n\n💡 Important : la difference entre vt et cr\n\nvt = vente encaissee immediatement (argent recu)\ncr = vente a credit (argent pas encore recu)\n\nLe benefice n augmente qu au moment du remboursement avec rb.\n\nDernier exemple : voir ton bilan du jour !\n\nÉTAPE 4/4 — Tape exactement : blj";
       }
       return "Pour continuer, tape exactement :\ncr Test 2000\n\n(ou \"stop\" pour arreter)";
     }
@@ -682,10 +682,11 @@ export async function processMessage(telephone, message) {
     }
     return "💼 COMMANDES MODE BUSINESS\n\n" +
       "ENREGISTRER :\n" +
-      "vt = Vente\n" +
+      "vt = Vente (argent recu immediatement)\n" +
       "dp = Depense\n" +
-      "cr = Credit (client)\n" +
-      "rb = Remboursement (client)\n\n" +
+      "cr = Credit client (argent a recevoir)\n" +
+      "rb = Remboursement (client qui paie sa dette)\n" +
+      "   vt si encaisse direct, cr si paie plus tard\n\n" +
       "CONSULTER :\n" +
       "blj = Bilan du jour\n" +
       "blm = Bilan du mois\n" +
