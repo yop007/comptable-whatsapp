@@ -179,9 +179,10 @@ async function getTier(userId) {
     .eq("utilisateur_id", userId)
     .single();
 
-  if (!data || !data.actif) return "gratuit";
-  if (data.date_fin && new Date(data.date_fin) < new Date()) return "gratuit";
-  return data.tier || "gratuit";
+  if (!data || !data.actif) return "expire";
+  if (data.date_fin && new Date(data.date_fin) < new Date()) return "expire";
+  if (data.tier === "gratuit" && data.date_fin && new Date(data.date_fin) > new Date()) return "essai";
+  return data.tier || "expire";
 }
 
 export async function processMessage(telephone, message) {
@@ -397,26 +398,23 @@ export async function processMessage(telephone, message) {
 
   const extracted = await extractTransaction(message, user.mode_actif || "business");
 
-  // Restrictions tier gratuit
-  if (tier === "gratuit") {
-    if (extracted.type === "budget_definir" || extracted.type === "budget_depense") {
-      return "⚠️ Cette fonctionnalité est disponible a partir du plan Business.\n\nContacte le support pour upgrader ton compte.";
+  // Aucune restriction pendant la periode d'essai
+  // Restrictions uniquement apres expiration ou pour les tiers payants
+
+  if (tier === "expire") {
+    if (["budget_depense", "budget_definir", "mode_perso", "historique"].includes(extracted.type)) {
+      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour souscrire a un abonnement et continuer a utiliser Bilan Pro.";
     }
-    if (extracted.type === "historique") {
-      return "⚠️ L'historique complet est disponible a partir du plan Pro.\n\nContacte le support pour upgrader ton compte.";
-    }
-    // Limite 50 transactions/mois
     const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
     const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("utilisateur_id", user.id).gte("created_at", debutMois.toISOString());
-    if (count >= 50 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
-      return "⚠️ Tu as atteint la limite de 50 transactions/mois du plan Gratuit.\n\nContacte le support pour upgrader ton compte.";
+    if (count >= 10 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
+      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour continuer.";
     }
   }
 
-  // Restrictions tier pro
   if (tier === "pro") {
-    if (extracted.type === "budget_definir" || extracted.type === "budget_depense") {
-      return "⚠️ Cette fonctionnalité est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
+    if (["budget_depense", "budget_definir"].includes(extracted.type)) {
+      return "⚠️ Cette fonctionnalite est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
     }
   }
 
