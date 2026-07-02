@@ -16,7 +16,7 @@ const pendingPinRecovery = {};
 const pendingNumberChange = {};
 const pendingTutorial = {};
 
-const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants en Guinee.
+const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
 
 Regles importantes :
@@ -31,40 +31,25 @@ Regles importantes :
 - "dp", "dep", "depense" = depense
 - "cr", "credit" = credit
 - "rb", "remb" = remboursement
-- "bl", "bilan" = bilan
 - "blj", "bilan jour" = bilan, periode: jour
 - "blm", "bilan mois" = bilan, periode: mois
 - "qui me doit", "liste des credits", "mes credits", "liste credits", "lc" = credits_liste
 - "aide", "help", "commandes", "?" = aide
 - "annuler", "supprimer", "erreur", "annule" = annuler
 - "oui", "yes", "confirmer" = confirmer
-- "non", "no", "annuler" = refuser
-- "mode perso", "perso", "maison", "personnel" = mode_perso
-- "mode business", "business", "boutique", "commerce" = mode_business
-- "mon mode", "quel mode", "mode actif" = voir_mode
-- "loyer", "logement", "louer" = budget_depense, categorie: loyer
-- "nourriture", "courses", "marche", "alimentation", "manger", "repas" = budget_depense, categorie: nourriture
-- "transport", "taxi", "carburant", "essence", "bus" = budget_depense, categorie: transport
-- "sante", "medecin", "medicaments", "pharmacie", "hopital", "clinique" = budget_depense, categorie: sante
-- "eau", "electricite", "facture", "internet", "telephone" = budget_depense, categorie: factures
-- "ecole", "scolarite", "frais scolaires", "universite" = budget_depense, categorie: education
-- "habit", "vetements", "fringues", "chaussures" = budget_depense, categorie: vetements
-- "loisirs", "sortie", "cinema", "restaurant", "vacances" = budget_depense, categorie: loisirs
-
+- "non", "no" = refuser
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
-- "budget", "definir budget", "mon budget", "fixer budget" = budget_definir
 - "changer numero", "nouveau numero", "changer mon numero" = changer_numero
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "mode_perso" | "mode_business" | "voir_mode" | "budget_depense" | "budget_definir" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
   "client": string | null,
-  "periode": "jour" | "mois" | null,
-  "categorie": string | null
+  "periode": "jour" | "mois" | null
 }
 Aucun texte avant ou apres le JSON.`;
 
@@ -89,15 +74,11 @@ async function getOrCreateUser(telephone) {
   return { user: data, isNew: false };
 }
 
-async function extractTransaction(message, mode) {
-  const modeInstruction = mode === "perso"
-    ? "L utilisateur est en MODE PERSONNEL. Les depenses ambigues comme taxi, courses, restaurant, transport sont des budget_depense avec la bonne categorie. Ne jamais retourner type depense simple en mode perso."
-    : "L utilisateur est en MODE BUSINESS. Les transactions sont professionnelles.";
-
+async function extractTransaction(message) {
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-      { role: "system", content: SYSTEM_PROMPT + "\n\n" + modeInstruction },
+      { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: message },
     ],
     temperature: 0,
@@ -201,9 +182,7 @@ export async function processMessage(telephone, message) {
   const QUESTIONS_SECRETES = [
     "1. Le prenom de ta mere ?",
     "2. Le nom de ton ecole primaire ?",
-    "3. Le nom de ta ville natale ?",
-    "4. Le prenom de ton meilleur ami d enfance ?",
-    "5. Le nom de ton premier animal ?"
+    "3. Le nom de ta ville natale ?"
   ];
 
   if (pendingPins[telephone]?.step === "create") {
@@ -220,20 +199,18 @@ export async function processMessage(telephone, message) {
       return "Les PIN ne correspondent pas. Recommence :";
     }
     pendingPins[telephone] = { step: "question", pin: message.trim() };
-    return "PIN confirme !\n\nChoisis une question secrete pour recuperer ton PIN :\n\n" + QUESTIONS_SECRETES.join("\n") + "\n\nReponds avec le numero (1 a 5) :";
+    return "PIN confirme !\n\nChoisis une question secrete pour recuperer ton PIN :\n\n" + QUESTIONS_SECRETES.join("\n") + "\n\nReponds avec le numero (1 a 3) :";
   }
 
   if (pendingPins[telephone]?.step === "question") {
     const choix = parseInt(message.trim());
-    if (isNaN(choix) || choix < 1 || choix > 5) {
-      return "Choix invalide. Reponds avec un numero entre 1 et 5 :";
+    if (isNaN(choix) || choix < 1 || choix > 3) {
+      return "Choix invalide. Reponds avec un numero entre 1 et 3 :";
     }
     const questions = [
       "Le prenom de ta mere ?",
       "Le nom de ton ecole primaire ?",
-      "Le nom de ta ville natale ?",
-      "Le prenom de ton meilleur ami d enfance ?",
-      "Le nom de ton premier animal ?"
+      "Le nom de ta ville natale ?"
     ];
     pendingPins[telephone] = { step: "reponse", pin: pendingPins[telephone].pin, question: questions[choix - 1] };
     return "Question choisie : " + questions[choix - 1] + "\n\nQuelle est ta reponse ?";
@@ -255,7 +232,6 @@ export async function processMessage(telephone, message) {
       .eq("telephone", telephone);
     delete pendingPins[telephone];
 
-    // Creer abonnement gratuit par defaut (2 semaines)
     const dateDebut = new Date();
     const dateFin = new Date();
     dateFin.setDate(dateFin.getDate() + 14);
@@ -271,7 +247,7 @@ export async function processMessage(telephone, message) {
 
     pendingTutorial[telephone] = { step: 1 };
 
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro !\n\nOn va faire un essai rapide ensemble pour que tu voies comment ca marche. Imagine une journee type de ton activite.\n\nÉTAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !\n\nOn va faire un essai rapide ensemble.\n\nETAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
@@ -318,38 +294,38 @@ export async function processMessage(telephone, message) {
       if (texte === "vt 1000 test") {
         await saveTransaction(user.id, { type: "vente", montant: 1000, description: "test" });
         pendingTutorial[telephone].step = 2;
-        return "✅ Enregistre : vente de 1,000 - test\n\nC'est exactement comme ca que tu enregistreras tes vraies ventes !\n\nÉTAPE 2/4 — Tu as une depense ?\nTape exactement : dp 500 test";
+        return "✅ Enregistre : vente de 1,000 - test\n\nC'est comme ca que tu enregistreras tes vraies ventes !\n\nETAPE 2/4 — Tu as une depense ?\nTape exactement : dp 500 test";
       }
-      return "Pour continuer le tutoriel, tape exactement :\nvt 1000 test\n\n(Tu pourras taper \"stop\" pour arreter le tutoriel a tout moment)";
+      return "Pour continuer, tape exactement :\nvt 1000 test\n\n(tape \"stop\" pour arreter le tutoriel)";
     }
 
     if (step === 2) {
-      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" pour voir les commandes."; }
       if (texte === "dp 500 test") {
         await saveTransaction(user.id, { type: "depense", montant: 500, description: "test" });
         pendingTutorial[telephone].step = 3;
-        return "✅ Enregistre : depense de 500 - test\n\nMaintenant un credit client !\n\nÉTAPE 3/4 — Un client achete a credit ?\nTape exactement : cr Test 2000";
+        return "✅ Enregistre : depense de 500 - test\n\nETAPE 3/4 — Un client achete a credit ?\nTape exactement : cr Test 2000";
       }
       return "Pour continuer, tape exactement :\ndp 500 test\n\n(ou \"stop\" pour arreter)";
     }
 
     if (step === 3) {
-      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" pour voir les commandes."; }
       if (texte === "cr test 2000") {
         await saveTransaction(user.id, { type: "credit", montant: 2000, client: "Test" });
         pendingTutorial[telephone].step = 4;
-        return "✅ Enregistre : credit de 2,000 (client: Test)\n\n💡 Important : la difference entre vt et cr\n\nvt = vente encaissee immediatement (argent recu)\ncr = vente a credit (argent pas encore recu)\n\nLe benefice n augmente qu au moment du remboursement avec rb.\n\nDernier exemple : voir ton bilan du jour !\n\nÉTAPE 4/4 — Tape exactement : blj";
+        return "✅ Enregistre : credit de 2,000 (client: Test)\n\n💡 La difference entre vt et cr :\nvt = vente encaissee immediatement\ncr = vente a credit (compte dans le benefice quand le client rembourse avec rb)\n\nETAPE 4/4 — Tape exactement : blj";
       }
       return "Pour continuer, tape exactement :\ncr Test 2000\n\n(ou \"stop\" pour arreter)";
     }
 
     if (step === 4) {
-      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" quand tu veux pour voir les commandes."; }
+      if (texte === "stop") { delete pendingTutorial[telephone]; return "Tutoriel arrete. Tape \"aide\" pour voir les commandes."; }
       if (texte === "blj") {
         delete pendingTutorial[telephone];
         const bilan = await getBilan(user.id, "jour");
         return "Bilan du jour :\nVentes : " + bilan.ventes.toLocaleString() + "\nDepenses : " + bilan.depenses.toLocaleString() + "\nBenefice : " + bilan.benefice.toLocaleString() + "\nCredits accordes : " + bilan.credits.toLocaleString() +
-          "\n\n🎉 Bravo, tu connais l'essentiel !\n\nTu peux maintenant utiliser Bilan Pro pour de vrai. Tape \"aide\" a tout moment pour revoir les commandes.\n\nAstuce : Tape \"mode perso\" si tu veux aussi suivre ton budget personnel (loyer, nourriture, transport...).";
+          "\n\n🎉 Bravo, tu connais l'essentiel !\n\nTape \"aide\" a tout moment pour revoir les commandes.";
       }
       return "Pour terminer, tape exactement :\nblj\n\n(ou \"stop\" pour arreter)";
     }
@@ -374,7 +350,6 @@ export async function processMessage(telephone, message) {
       return "Ancien numero ou PIN incorrect. Recommencez avec 'changer numero'.";
     }
 
-    // Transfert du compte
     await supabase.from("transactions")
       .update({ utilisateur_id: user.id })
       .eq("utilisateur_id", ancienUser.id);
@@ -384,83 +359,34 @@ export async function processMessage(telephone, message) {
         pin: ancienUser.pin,
         pin_confirme: true,
         question_secrete: ancienUser.question_secrete,
-        reponse_secrete: ancienUser.reponse_secrete,
-        mode_actif: ancienUser.mode_actif,
-        budget_mensuel: ancienUser.budget_mensuel
+        reponse_secrete: ancienUser.reponse_secrete
       })
       .eq("telephone", telephone);
 
     await supabase.from("utilisateurs").delete().eq("id", ancienUser.id);
-
     delete pendingNumberChange[telephone];
     return "✅ Compte transfere avec succes !\n\nToutes vos transactions ont ete transferees vers ce nouveau numero.";
   }
 
-  const extracted = await extractTransaction(message, user.mode_actif || "business");
+  const extracted = await extractTransaction(message);
 
-  // Aucune restriction pendant la periode d'essai
-  // Restrictions uniquement apres expiration ou pour les tiers payants
-
+  // Restrictions apres expiration
   if (tier === "expire") {
-    if (["budget_depense", "budget_definir", "mode_perso", "historique"].includes(extracted.type)) {
-      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour souscrire a un abonnement et continuer a utiliser Bilan Pro.";
-    }
     const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
     const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("utilisateur_id", user.id).gte("created_at", debutMois.toISOString());
     if (count >= 10 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
+      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour souscrire a un abonnement et continuer.";
+    }
+    if (extracted.type === "historique") {
       return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour continuer.";
     }
   }
 
   if (tier === "pro") {
-    if (["budget_depense", "budget_definir"].includes(extracted.type)) {
-      return "⚠️ Cette fonctionnalite est disponible uniquement avec le plan Business.\n\nContacte le support pour upgrader ton compte.";
-    }
-  }
-
-  // Bloquer credit et remboursement en mode perso
-  if (user.mode_actif === "perso" && (extracted.type === "credit" || extracted.type === "remboursement")) {
-    return "⚠️ Les crédits clients ne sont pas disponibles en mode personnel.\n\nTape 'mode business' pour revenir au mode business.";
+    // Pas de restrictions specifiques pour le moment
   }
 
   if (extracted.type === "bilan") {
-    if (user.mode_actif === "perso") {
-      const from = new Date();
-      if (extracted.periode === "mois") {
-        from.setDate(1);
-      }
-      from.setHours(0, 0, 0, 0);
-
-      const { data } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("utilisateur_id", user.id)
-        .gte("created_at", from.toISOString())
-        .not("categorie", "is", null);
-
-      const transactions = data || [];
-      if (transactions.length === 0) return "Aucune depense personnelle enregistree.";
-
-      const emojis = { loyer: "🏠", nourriture: "🛒", transport: "🚗", sante: "💊", factures: "💡", education: "🎓", vetements: "👕", loisirs: "🎉", autre: "📦" };
-      const parCategorie = {};
-      for (const t of transactions) {
-        const cat = t.categorie || "autre";
-        if (!parCategorie[cat]) parCategorie[cat] = 0;
-        parCategorie[cat] += t.montant;
-      }
-
-      const total = Object.values(parCategorie).reduce((s, v) => s + v, 0);
-      const lignes = Object.entries(parCategorie)
-        .sort((a, b) => b[1] - a[1])
-        .map(([cat, montant]) => (emojis[cat] || "📦") + " " + cat.charAt(0).toUpperCase() + cat.slice(1) + " : " + montant.toLocaleString())
-        .join("\n");
-
-      return "Bilan perso " + (extracted.periode === "mois" ? "du mois" : "du jour") + " :\n\n" +
-        lignes + "\n" +
-        "───────────────────\n" +
-        "Total depense : " + total.toLocaleString() +
-        (user.budget_mensuel ? "\nBudget restant : " + (user.budget_mensuel - total).toLocaleString() + (total > user.budget_mensuel ? " \u26a0\ufe0f BUDGET DEPASSE !" : "") : "");
-    }
     if (extracted.client) {
       const solde = await getSoldeClient(user.id, extracted.client);
       return "Solde de " + extracted.client + " :\n" + (solde > 0 ? "Doit encore : " + solde.toLocaleString() + " " + (extracted.devise || "") : "Aucune dette en cours.");
@@ -486,7 +412,7 @@ export async function processMessage(telephone, message) {
     if (!data || data.length === 0) return "Aucune transaction enregistree.";
 
     const emojis = { vente: "✅", depense: "💸", credit: "📋", remboursement: "💰" };
-    const liste = data.map((t, i) =>
+    const liste = data.map((t) =>
       (emojis[t.type] || "•") + " " + t.type.toUpperCase() + " " + t.montant?.toLocaleString() +
       (t.description ? " - " + t.description : "") +
       (t.client ? " (" + t.client + ")" : "") +
@@ -553,20 +479,6 @@ export async function processMessage(telephone, message) {
     const pending = pendingCancellations[user.telephone];
     if (!pending) return "Aucune suppression en attente.";
 
-    if (pending.step === "choix") {
-      const choix = parseInt(message.trim());
-      if (isNaN(choix) || choix < 1 || choix > pending.transactions.length) {
-        return "Choix invalide. Reponds avec un numero entre 1 et " + pending.transactions.length + " :";
-      }
-      const t = pending.transactions[choix - 1];
-      pendingCancellations[user.telephone] = { step: "confirmation", id: t.id, transaction: t };
-      return "Confirmer la suppression de :\n" +
-        t.type.toUpperCase() + " de " + t.montant?.toLocaleString() +
-        (t.description ? " - " + t.description : "") +
-        (t.client ? " (" + t.client + ")" : "") +
-        "\n\nReponds oui pour supprimer ou non pour annuler.";
-    }
-
     if (pending.step === "confirmation") {
       await supabase.from("transactions").delete().eq("id", pending.id);
       delete pendingCancellations[user.telephone];
@@ -600,87 +512,12 @@ export async function processMessage(telephone, message) {
     return "Question secrete : " + user.question_secrete + "\n\nQuelle est ta reponse ?";
   }
 
-  if (extracted.type === "mode_perso") {
-    await supabase.from("utilisateurs").update({ mode_actif: "perso" }).eq("telephone", telephone);
-    return "🏠 Mode personnel active.\n\nTes prochaines entrees seront enregistrees comme depenses personnelles.\n\nTape \"aide\" pour voir les commandes disponibles.";
-  }
-
-  if (extracted.type === "mode_business") {
-    await supabase.from("utilisateurs").update({ mode_actif: "business" }).eq("telephone", telephone);
-    return "Mode business active. Tes prochaines entrees seront enregistrees comme transactions professionnelles.\n\nTape \"mode perso\" pour passer au mode personnel.";
-  }
-
-  if (extracted.type === "voir_mode") {
-    const mode = user.mode_actif || "business";
-    return "Mode actif : " + (mode === "perso" ? "Personnel" : "Business") + "\n\nTape \"mode perso\" ou \"mode business\" pour changer.";
-  }
-
-  if (extracted.type === "budget_definir") {
-    if (extracted.montant) {
-      await supabase.from("utilisateurs").update({ budget_mensuel: extracted.montant }).eq("telephone", telephone);
-      return "💰 Budget mensuel defini : " + extracted.montant.toLocaleString() + "\n\nJe te signalerai quand tu approches de la limite.";
-    }
-    // Pas de montant — afficher le budget actuel
-    const budget = user.budget_mensuel;
-    if (!budget) return "💰 Aucun budget defini.\n\nTape \"aide\" pour voir comment definir ton budget.";
-    return "💰 Ton budget mensuel : " + budget.toLocaleString() + "\n\nPour le modifier, tape budget suivi du nouveau montant.";
-  }
-
-  if (extracted.type === "budget_depense") {
-    if (!extracted.montant) return "Montant manquant. Tape \"aide\" pour voir comment enregistrer une depense.";
-    const categorie = extracted.categorie || "autre";
-    const emojis = { loyer: "🏠", nourriture: "🛒", transport: "🚗", sante: "💊", factures: "💡", education: "🎓", vetements: "👕", loisirs: "🎉", autre: "📦" };
-    const emoji = emojis[categorie] || "📦";
-    await supabase.from("transactions").insert({
-      utilisateur_id: user.id,
-      type: "depense",
-      montant: extracted.montant,
-      description: extracted.description || categorie,
-      categorie: categorie
-    });
-    const confirmation = emoji + " Depense perso enregistree :\n" + categorie.charAt(0).toUpperCase() + categorie.slice(1) + " : " + extracted.montant.toLocaleString() + (extracted.description ? " - " + extracted.description : "") + "\nCategorie : " + categorie;
-
-    // Alerte budget si defini
-    if (user.budget_mensuel) {
-      const debutMois = new Date();
-      debutMois.setDate(1);
-      debutMois.setHours(0, 0, 0, 0);
-      const { data: txMois } = await supabase.from("transactions").select("montant").eq("utilisateur_id", user.id).not("categorie", "is", null).gte("created_at", debutMois.toISOString());
-      const totalMois = (txMois || []).reduce((s, t) => s + t.montant, 0);
-      const restant = user.budget_mensuel - totalMois;
-      if (totalMois > user.budget_mensuel) {
-        return confirmation + "\n\n\u26a0\ufe0f Budget depasse de " + Math.abs(restant).toLocaleString() + " !";
-      } else if (totalMois >= user.budget_mensuel * 0.8) {
-        return confirmation + "\n\n\u26a0\ufe0f Attention : " + restant.toLocaleString() + " restant sur ton budget.";
-      }
-    }
-    return confirmation;
-  }
-
   if (extracted.type === "inconnu") {
     return "Je n ai pas compris ta demande.\n\nTape \"aide\" pour voir la liste des commandes disponibles.";
   }
 
   if (extracted.type === "aide") {
-    const mode = user.mode_actif || "business";
-    if (mode === "perso") {
-      return "🏠 COMMANDES MODE PERSONNEL\n\n" +
-        "ENREGISTRER UNE DEPENSE :\n" +
-        "Ecris simplement la categorie suivie du montant\n" +
-        "Categories : loyer, nourriture, transport, sante, factures, education, vetements, loisirs\n\n" +
-        "CONSULTER :\n" +
-        "blj = Bilan du jour\n" +
-        "blm = Bilan du mois\n" +
-        "ht  = Historique (5 dernieres operations)\n\n" +
-        "BUDGET :\n" +
-        "budget = Definir ou voir ton budget mensuel\n\n" +
-        "AUTRES :\n" +
-        "mode business = Passer en mode Business\n" +
-        "mon mode      = Voir le mode actif\n" +
-        "annuler       = Annuler une operation\n" +
-        "aide          = Afficher ce menu";
-    }
-    return "💼 COMMANDES MODE BUSINESS\n\n" +
+    return "💼 COMMANDES BILAN PRO\n\n" +
       "ENREGISTRER :\n" +
       "vt = Vente (argent recu immediatement)\n" +
       "dp = Depense\n" +
@@ -693,12 +530,10 @@ export async function processMessage(telephone, message) {
       "lc  = Liste des credits en cours\n" +
       "ht  = Historique (5 dernieres operations)\n\n" +
       "AUTRES :\n" +
-      "mode perso    = Passer en mode Personnel\n" +
-      "mon mode      = Voir le mode actif\n" +
-      "annuler       = Annuler une operation\n" +
-      "pin oublie    = Recuperer ton PIN\n" +
-      "changer numero = Transferer ton compte sur un nouveau numero\n" +
-      "aide          = Afficher ce menu";
+      "annuler        = Annuler une operation\n" +
+      "pin oublie     = Recuperer ton PIN\n" +
+      "changer numero = Transferer ton compte\n" +
+      "aide           = Afficher ce menu";
   }
 
   await saveTransaction(user.id, extracted);
