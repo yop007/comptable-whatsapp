@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bilan Pro — Gérez votre business et votre budget sur WhatsApp</title>
+  <title>Bilan Pro — Votre assistant comptable sur WhatsApp</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QYJT9JWH8Q"></script>
   <script>
@@ -16,22 +16,16 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; color: #333; }
 
-    /* NAV SIMPLIFIÉE */
     nav { background: #085041; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     nav .logo { text-decoration: none; display: flex; flex-direction: column; line-height: 1; }
     nav .logo .logo-top { font-size: 1.3rem; font-weight: 900; color: white; letter-spacing: -0.5px; }
     nav .logo .logo-top span { font-weight: 200; }
     nav .logo .logo-bar { width: 100%; height: 2px; background: #25D366; border-radius: 1px; margin-top: 2px; }
     nav .logo .logo-sub { font-size: 0.6rem; font-weight: 300; letter-spacing: 4px; color: rgba(255,255,255,0.8); margin-top: 3px; }
-    nav .nav-right { display: flex; gap: 1rem; align-items: center; }
     nav .lang { display: flex; gap: 6px; }
     nav .lang button { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; }
     nav .lang button.active { background: white; color: #085041; font-weight: 600; }
-    nav .btn-nav-wa { background: #25D366; color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; }
-    nav .btn-nav-client { color: rgba(255,255,255,0.8); font-size: 13px; text-decoration: none; }
-    nav .btn-nav-client:hover { color: white; }
 
-    /* HERO */
     .hero { background: linear-gradient(135deg, #085041 0%, #0F6E56 100%); color: white; padding: 5rem 2rem 4rem; text-align: center; }
     .hero .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 1.5rem; }
     .hero h1 { font-size: 2.6rem; margin-bottom: 1rem; line-height: 1.2; font-weight: 800; }
@@ -44,27 +38,6 @@
     .btn-secondary { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); color: white; padding: 14px 24px; border-radius: 50px; font-size: 0.95rem; font-weight: 500; text-decoration: none; border: 1px solid rgba(255,255,255,0.3); }
     .btn-secondary:hover { background: rgba(255,255,255,0.25); }
 
-    /* DUO PACK */
-    .duo { padding: 4rem 2rem; background: #f9f9f7; }
-    .duo h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; font-weight: 700; }
-    .duo .sub { text-align: center; color: #888; margin-bottom: 2.5rem; font-size: 1rem; }
-    .duo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 860px; margin: 0 auto; }
-    .duo-card { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid #085041; }
-    .duo-card.perso { border-top-color: #25D366; }
-    .duo-card .duo-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    .duo-card h3 { font-size: 1.2rem; color: #085041; margin-bottom: 0.5rem; font-weight: 700; }
-    .duo-card.perso h3 { color: #1a7a40; }
-    .duo-card .duo-tag { display: inline-block; background: #e1f5ee; color: #085041; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .duo-card.perso .duo-tag { background: #e8f8f0; color: #1a7a40; }
-    .duo-card p { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 1rem; }
-    .duo-card ul { list-style: none; }
-    .duo-card ul li { font-size: 13px; color: #666; padding: 4px 0; display: flex; align-items: center; gap: 8px; }
-    .duo-card ul li::before { content: "✓"; color: #085041; font-weight: 700; }
-    .duo-card.perso ul li::before { color: #1a7a40; }
-    .duo-switch { text-align: center; margin-top: 2rem; font-size: 14px; color: #888; }
-    .duo-switch strong { color: #085041; }
-
-    /* FEATURES */
     .features { padding: 4rem 2rem; max-width: 960px; margin: 0 auto; }
     .features h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; font-weight: 700; }
     .features .sub { text-align: center; color: #888; margin-bottom: 2.5rem; }
@@ -74,7 +47,6 @@
     .feature h3 { font-size: 1rem; margin-bottom: 0.5rem; color: #085041; font-weight: 600; }
     .feature p { font-size: 13px; color: #666; line-height: 1.5; }
 
-    /* HOW */
     .how { padding: 4rem 2rem; background: #f9f9f7; text-align: center; }
     .how h2 { font-size: 1.8rem; margin-bottom: 2.5rem; color: #085041; font-weight: 700; }
     .steps { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
@@ -82,15 +54,10 @@
     .step .num { width: 36px; height: 36px; background: #085041; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 1rem; }
     .step p { font-size: 13px; color: #555; line-height: 1.5; }
 
-    /* EXEMPLES */
     .exemples { padding: 4rem 2rem; background: white; }
     .exemples h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; font-weight: 700; }
     .exemples .sub { text-align: center; color: #888; margin-bottom: 2rem; }
-    .exemples-tabs { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .exemples-tabs button { padding: 10px 24px; border-radius: 25px; border: 2px solid #085041; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; background: white; color: #085041; }
-    .exemples-tabs button.active { background: #085041; color: white; }
-    .exemples-content { display: none; max-width: 380px; margin: 0 auto; }
-    .exemples-content.active { display: block; }
+    .exemples-content { max-width: 380px; margin: 0 auto; }
     .wa-screen { background: #e5ddd5; border-radius: 16px; padding: 1rem; }
     .wa-header { background: #085041; color: white; border-radius: 12px 12px 0 0; padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin: -1rem -1rem 1rem; font-size: 14px; font-weight: 600; }
     .wa-avatar { width: 36px; height: 36px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -102,7 +69,6 @@
     .bubble.received .bubble-text { background: white; border-radius: 12px 12px 12px 0; }
     .bubble-time { font-size: 10px; color: #888; margin-top: 2px; padding: 0 4px; }
 
-    /* FAQ */
     .faq { padding: 4rem 2rem; max-width: 800px; margin: 0 auto; }
     .faq h2 { font-size: 1.8rem; text-align: center; margin-bottom: 2.5rem; color: #085041; font-weight: 700; }
     .faq-item { border: 1px solid #eee; border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
@@ -113,7 +79,6 @@
     .faq-answer { display: none; padding: 0 1.5rem 1rem; font-size: 14px; color: #555; line-height: 1.6; }
     .faq-answer.open { display: block; }
 
-    /* CONTACT */
     .contact { padding: 4rem 2rem; background: #f9f9f7; }
     .contact h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; font-weight: 700; }
     .contact .sub { text-align: center; color: #888; margin-bottom: 2rem; }
@@ -122,10 +87,8 @@
     .contact input:focus, .contact select:focus, .contact textarea:focus { outline: none; border-color: #085041; }
     .contact textarea { resize: vertical; min-height: 120px; }
     .contact button { padding: 14px; background: #085041; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .contact button:hover { background: #064032; }
     #contact-success { display: none; text-align: center; color: #085041; font-weight: 600; padding: 1rem; background: #e1f5ee; border-radius: 8px; }
 
-    /* CTA */
     .cta { background: #085041; color: white; padding: 4rem 2rem; text-align: center; }
     .cta h2 { font-size: 1.8rem; margin-bottom: 1rem; font-weight: 700; }
     .cta p { opacity: 0.9; margin-bottom: 2rem; }
@@ -136,7 +99,6 @@
 
     @media (max-width: 640px) {
       .hero h1 { font-size: 1.9rem; }
-      .duo-grid { grid-template-columns: 1fr; }
       .features-grid { grid-template-columns: 1fr; }
       .steps { flex-direction: column; align-items: center; }
       .hero-btns { flex-direction: column; align-items: center; }
@@ -145,85 +107,47 @@
 </head>
 <body>
 
-<!-- NAV SIMPLIFIÉE -->
 <nav>
   <a href="#" class="logo">
     <div class="logo-top">B<span>ilan</span></div>
     <div class="logo-bar"></div>
     <div class="logo-sub">PRO</div>
   </a>
-  <div class="nav-right">
-    <div class="lang">
-      <button class="active" onclick="setLang('fr')">FR</button>
-      <button onclick="setLang('en')">EN</button>
-    </div>
+  <div class="lang">
+    <button class="active" onclick="setLang('fr')">FR</button>
+    <button onclick="setLang('en')">EN</button>
   </div>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
   <div class="badge">
     <span>📱</span>
     <span data-fr="Fonctionne sur WhatsApp · Aucune installation" data-en="Works on WhatsApp · No installation">Fonctionne sur WhatsApp · Aucune installation</span>
   </div>
-  <h1 data-fr="Gérez votre <span>business</span> et votre <span>budget</span> sur WhatsApp" data-en="Manage your <span>business</span> and <span>budget</span> on WhatsApp">Gérez votre <span>business</span> et votre <span>budget</span> sur WhatsApp</h1>
-  <p data-fr="Un seul numéro WhatsApp pour tout : ventes, dépenses, crédits clients, budget du foyer. Bilan Pro comprend votre langage naturel et s'adapte à votre usage." data-en="One WhatsApp number for everything: sales, expenses, customer credits, household budget. Bilan Pro understands your natural language and adapts to your needs.">Un seul numéro WhatsApp pour tout : ventes, dépenses, crédits clients, budget du foyer. Bilan Pro comprend votre langage naturel et s'adapte à votre usage.</p>
+  <h1 data-fr="Ton assistant <span>comptable</span> sur WhatsApp" data-en="Your <span>accounting</span> assistant on WhatsApp">Ton assistant <span>comptable</span> sur WhatsApp</h1>
+  <p data-fr="Pour la gestion de ton business au jour le jour. Ventes, dépenses, crédits clients, bilans automatiques. Tu écris, Bilan Pro enregistre." data-en="For your day-to-day business management. Sales, expenses, customer credits, automatic reports. You write, Bilan Pro records.">Pour la gestion de ton business au jour le jour. Ventes, dépenses, crédits clients, bilans automatiques. Tu écris, Bilan Pro enregistre.</p>
   <div class="hero-btns">
     <a href="https://wa.me/15344449308?text=Appuyer%20sur%20envoyer%20pour%20vous%20inscrire" class="btn-wa">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       <span data-fr="Démarrer gratuitement" data-en="Start for free">Démarrer gratuitement</span>
     </a>
-    <a href="/client" class="btn-secondary" data-fr="🔐 Accéder à mon compte" data-en="🔐 Access my account">🔐 Accéder à mon compte</a>
+    <a href="/client" class="btn-secondary" data-fr="🔐 Mon compte" data-en="🔐 My account">🔐 Mon compte</a>
   </div>
 </section>
 
-<!-- DUO PACK -->
-<section class="duo">
+<section class="features">
   <h2 data-fr="Tout ce dont vous avez besoin" data-en="Everything you need">Tout ce dont vous avez besoin</h2>
-  <p class="sub" data-fr="Pour gérer votre business ET votre budget personnel — avec le même numéro WhatsApp" data-en="To manage your business AND your personal budget — with the same WhatsApp number">Pour gérer votre business ET votre budget personnel — avec le même numéro WhatsApp</p>
-  <div class="duo-grid">
-    <div class="duo-card">
-      <div class="duo-icon">💼</div>
-      <div class="duo-tag" data-fr="MODE BUSINESS" data-en="BUSINESS MODE">MODE BUSINESS</div>
-      <h3 data-fr="Gérez votre activité professionnelle" data-en="Manage your professional activity">Gérez votre activité professionnelle</h3>
-      <p data-fr="Commerçants, artisans, prestataires — suivez chaque transaction de votre activité en temps réel." data-en="Merchants, craftsmen, service providers — track every transaction in real time.">Commerçants, artisans, prestataires — suivez chaque transaction de votre activité en temps réel.</p>
-      <ul>
-        <li data-fr="Ventes et dépenses en un message" data-en="Sales and expenses in one message">Ventes et dépenses en un message</li>
-        <li data-fr="Suivi des crédits clients" data-en="Customer credit tracking">Suivi des crédits clients</li>
-        <li data-fr="Rappels automatiques après 7 jours" data-en="Automatic reminders after 7 days">Rappels automatiques après 7 jours</li>
-        <li data-fr="Bilan jour, semaine, mois" data-en="Daily, weekly, monthly report">Bilan jour, semaine, mois</li>
-      </ul>
-    </div>
-    <div class="duo-card perso">
-      <div class="duo-icon">🏠</div>
-      <div class="duo-tag" data-fr="MODE PERSONNEL" data-en="PERSONAL MODE">MODE PERSONNEL</div>
-      <h3 data-fr="Maîtrisez votre budget du foyer" data-en="Control your household budget">Maîtrisez votre budget du foyer</h3>
-      <p data-fr="Ménagères, salariés, étudiants — sachez exactement où va votre argent chaque mois." data-en="Homemakers, employees, students — know exactly where your money goes each month.">Ménagères, salariés, étudiants — sachez exactement où va votre argent chaque mois.</p>
-      <ul>
-        <li data-fr="Loyer, nourriture, transport, santé..." data-en="Rent, food, transport, health...">Loyer, nourriture, transport, santé...</li>
-        <li data-fr="Définissez un budget mensuel" data-en="Set a monthly budget">Définissez un budget mensuel</li>
-        <li data-fr="Alertes quand vous approchez la limite" data-en="Alerts when you approach the limit">Alertes quand vous approchez la limite</li>
-        <li data-fr="Bilan par catégorie de dépense" data-en="Report by expense category">Bilan par catégorie de dépense</li>
-      </ul>
-    </div>
-  </div>
-  <p class="duo-switch" data-fr="Basculez entre les deux modes en un message : <strong>mode business</strong> ou <strong>mode perso</strong>" data-en="Switch between modes in one message: <strong>business mode</strong> or <strong>personal mode</strong>">Basculez entre les deux modes en un message : <strong>mode business</strong> ou <strong>mode perso</strong></p>
-</section>
-
-<!-- FONCTIONNALITÉS -->
-<section id="fonctionnalites" class="features">
-  <h2 data-fr="Fonctionnalités clés" data-en="Key features">Fonctionnalités clés</h2>
-  <p class="sub" data-fr="Tout ce qui compte, accessible via WhatsApp" data-en="Everything that matters, accessible via WhatsApp">Tout ce qui compte, accessible via WhatsApp</p>
+  <p class="sub" data-fr="Pour gérer votre business au quotidien sur WhatsApp" data-en="To manage your business daily on WhatsApp">Pour gérer votre business au quotidien sur WhatsApp</p>
   <div class="features-grid">
     <div class="feature">
       <div class="icon">💬</div>
       <h3 data-fr="Langage naturel" data-en="Natural language">Langage naturel</h3>
-      <p data-fr="Écrivez comme vous parlez. 'vt 50000 riz' ou 'loyer 150000' — Bilan Pro comprend." data-en="Write as you speak. 'vt 50000 rice' or 'rent 150000' — Bilan Pro understands.">Écrivez comme vous parlez. Bilan Pro comprend votre langage.</p>
+      <p data-fr="Écrivez comme vous parlez. vt, dp, cr, rb — Bilan Pro comprend instantanément." data-en="Write as you speak. vt, dp, cr, rb — Bilan Pro understands instantly.">Écrivez comme vous parlez. Bilan Pro comprend votre langage.</p>
     </div>
     <div class="feature">
       <div class="icon">📊</div>
       <h3 data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</h3>
-      <p data-fr="Bilan du jour, de la semaine et du mois envoyé automatiquement chaque semaine." data-en="Daily, weekly and monthly reports sent automatically every week.">Bilan du jour, semaine et mois envoyé automatiquement.</p>
+      <p data-fr="Bilan du jour et du mois disponibles à tout moment. Rapport hebdomadaire automatique." data-en="Daily and monthly reports available anytime. Automatic weekly report.">Bilan du jour et du mois à tout moment. Rapport hebdo automatique.</p>
     </div>
     <div class="feature">
       <div class="icon">📋</div>
@@ -231,14 +155,14 @@
       <p data-fr="Suivez qui vous doit quoi. Rappels automatiques après 7 jours d'impayé." data-en="Track who owes you what. Automatic reminders after 7 days.">Suivez qui vous doit quoi avec rappels automatiques.</p>
     </div>
     <div class="feature">
-      <div class="icon">💰</div>
-      <h3 data-fr="Budget avec alertes" data-en="Budget with alerts">Budget avec alertes</h3>
-      <p data-fr="Définissez votre budget mensuel et recevez une alerte dès que vous approchez la limite." data-en="Set your monthly budget and get an alert when you approach the limit.">Définissez votre budget et recevez des alertes automatiques.</p>
+      <div class="icon">🔒</div>
+      <h3 data-fr="Compte sécurisé" data-en="Secure account">Compte sécurisé</h3>
+      <p data-fr="PIN + question secrète pour protéger votre compte et le récupérer si besoin." data-en="PIN + secret question to protect your account and recover it if needed.">PIN + question secrète pour protéger et récupérer votre compte.</p>
     </div>
     <div class="feature">
-      <div class="icon">🔒</div>
-      <h3 data-fr="Sécurité PIN" data-en="PIN security">Sécurité PIN</h3>
-      <p data-fr="Compte protégé par PIN + question secrète. Panel client accessible via navigateur." data-en="Account protected by PIN + secret question. Client panel accessible via browser.">PIN + question secrète. Panel client sur navigateur.</p>
+      <div class="icon">📱</div>
+      <h3 data-fr="Panel client web" data-en="Web client panel">Panel client web</h3>
+      <p data-fr="Accédez à votre historique complet sur bilanpro.app/client. Export CSV, TXT, Excel." data-en="Access your full history at bilanpro.app/client. CSV, TXT, Excel export.">Historique complet sur bilanpro.app/client. Export CSV, TXT, Excel.</p>
     </div>
     <div class="feature">
       <div class="icon">🌍</div>
@@ -248,79 +172,53 @@
   </div>
 </section>
 
-<!-- COMMENT ÇA MARCHE -->
-<section id="comment" class="how">
+<section class="how">
   <h2 data-fr="Comment ça marche ?" data-en="How does it work?">Comment ça marche ?</h2>
   <div class="steps">
     <div class="step">
       <div class="num">1</div>
-      <p data-fr="Envoyez un message WhatsApp à Bilan Pro et créez votre compte en 2 minutes" data-en="Send a WhatsApp message to Bilan Pro and create your account in 2 minutes">Envoyez un message WhatsApp et créez votre compte en 2 minutes</p>
+      <p data-fr="Clique sur Démarrer et envoie le message à Bilan Pro sur WhatsApp" data-en="Click Start and send the message to Bilan Pro on WhatsApp">Clique sur Démarrer et envoie le message à Bilan Pro</p>
     </div>
     <div class="step">
       <div class="num">2</div>
-      <p data-fr="Choisissez votre mode : Business pour votre activité, Personnel pour votre budget" data-en="Choose your mode: Business for your activity, Personal for your budget">Choisissez votre mode : Business ou Personnel</p>
+      <p data-fr="Crée ton PIN en 4 chiffres pour sécuriser ton compte" data-en="Create your 4-digit PIN to secure your account">Crée ton PIN en 4 chiffres pour sécuriser ton compte</p>
     </div>
     <div class="step">
       <div class="num">3</div>
-      <p data-fr="Enregistrez vos transactions en langage naturel — Bilan Pro comprend et enregistre" data-en="Record your transactions in natural language — Bilan Pro understands and records">Enregistrez en langage naturel — Bilan Pro fait le reste</p>
+      <p data-fr="Enregistre tes transactions : vt (vente), dp (dépense), cr (crédit), rb (remboursement)" data-en="Record your transactions: vt (sale), dp (expense), cr (credit), rb (repayment)">Enregistre tes transactions en langage naturel</p>
     </div>
     <div class="step">
       <div class="num">4</div>
-      <p data-fr="Consultez votre bilan à tout moment et recevez des rapports automatiques chaque semaine" data-en="Check your balance anytime and receive automatic reports every week">Consultez votre bilan et recevez des rapports automatiques</p>
+      <p data-fr="Consulte ton bilan avec blj (jour) ou blm (mois) et reçois des rapports automatiques" data-en="Check your balance with blj (day) or blm (month) and receive automatic reports">Consulte ton bilan et reçois des rapports automatiques</p>
     </div>
   </div>
 </section>
 
-<!-- EXEMPLES -->
-<section id="exemples" class="exemples">
-  <h2 data-fr="Exemples d'utilisation" data-en="Usage examples">Exemples d'utilisation</h2>
-  <p class="sub" data-fr="Voyez Bilan Pro en action" data-en="See Bilan Pro in action">Voyez Bilan Pro en action</p>
-  <div class="exemples-tabs">
-    <button class="active" onclick="showExemple('business', event)">💼 Mode Business</button>
-    <button onclick="showExemple('perso', event)">🏠 Mode Personnel</button>
-  </div>
-  <div id="exemple-business" class="exemples-content active">
+<section class="exemples">
+  <h2 data-fr="Une journée avec Bilan Pro" data-en="A day with Bilan Pro">Une journée avec Bilan Pro</h2>
+  <p class="sub" data-fr="Voyez comment un commerçant utilise Bilan Pro au quotidien" data-en="See how a merchant uses Bilan Pro daily">Voyez comment un commerçant utilise Bilan Pro au quotidien</p>
+  <div class="exemples-content">
     <div class="wa-screen">
       <div class="wa-header"><div class="wa-avatar">🤖</div><span>Bilan Pro</span></div>
       <div class="bubble sent"><div class="bubble-text">vt 85000 riz</div><div class="bubble-time">08:12</div></div>
       <div class="bubble received"><div class="bubble-text">✅ Enregistré : vente de 85 000 - riz</div><div class="bubble-time">08:12</div></div>
-      <div class="bubble sent"><div class="bubble-text">cr Mamadou 50000</div><div class="bubble-time">09:45</div></div>
-      <div class="bubble received"><div class="bubble-text">📋 Enregistré : credit de 50 000 (client: Mamadou)</div><div class="bubble-time">09:45</div></div>
-      <div class="bubble sent"><div class="bubble-text">blj</div><div class="bubble-time">17:00</div></div>
+      <div class="bubble sent"><div class="bubble-text">dp 5000 taxi</div><div class="bubble-time">09:30</div></div>
+      <div class="bubble received"><div class="bubble-text">✅ Enregistré : depense de 5 000 - taxi</div><div class="bubble-time">09:30</div></div>
+      <div class="bubble sent"><div class="bubble-text">cr Mamadou 50000</div><div class="bubble-time">10:45</div></div>
+      <div class="bubble received"><div class="bubble-text">📋 Enregistré : credit de 50 000 (client: Mamadou)</div><div class="bubble-time">10:45</div></div>
+      <div class="bubble sent"><div class="bubble-text">rb Mamadou 50000</div><div class="bubble-time">14:20</div></div>
+      <div class="bubble received"><div class="bubble-text">✅ Enregistré : remboursement de 50 000 (client: Mamadou)</div><div class="bubble-time">14:20</div></div>
+      <div class="bubble sent"><div class="bubble-text">blj</div><div class="bubble-time">18:00</div></div>
       <div class="bubble received"><div class="bubble-text">Bilan du jour :
-✅ Ventes : 85 000
-💸 Dépenses : 0
-💰 Bénéfice : 85 000
-📋 Crédits : 50 000</div><div class="bubble-time">17:00</div></div>
-    </div>
-  </div>
-  <div id="exemple-perso" class="exemples-content">
-    <div class="wa-screen">
-      <div class="wa-header"><div class="wa-avatar">🤖</div><span>Bilan Pro</span></div>
-      <div class="bubble sent"><div class="bubble-text">mode perso</div><div class="bubble-time">08:00</div></div>
-      <div class="bubble received"><div class="bubble-text">🏠 Mode personnel activé.
-Exemples : loyer 150000, courses 30000, taxi 5000</div><div class="bubble-time">08:00</div></div>
-      <div class="bubble sent"><div class="bubble-text">loyer 200000</div><div class="bubble-time">08:05</div></div>
-      <div class="bubble received"><div class="bubble-text">🏠 Dépense enregistrée :
-Loyer : 200 000
-Catégorie : loyer</div><div class="bubble-time">08:05</div></div>
-      <div class="bubble sent"><div class="bubble-text">courses 45000 marché</div><div class="bubble-time">10:30</div></div>
-      <div class="bubble received"><div class="bubble-text">🛒 Dépense enregistrée :
-Nourriture : 45 000 - marché
-⚠️ Budget restant : 55 000</div><div class="bubble-time">10:30</div></div>
-      <div class="bubble sent"><div class="bubble-text">blm</div><div class="bubble-time">18:00</div></div>
-      <div class="bubble received"><div class="bubble-text">Bilan perso du mois :
-🏠 Loyer : 200 000
-🛒 Nourriture : 45 000
-───────────────
-Total : 245 000
-Restant : 55 000</div><div class="bubble-time">18:00</div></div>
+Ventes : 85 000
+Depenses : 5 000
+Benefice : 80 000
+Credits accordes : 0</div><div class="bubble-time">18:00</div></div>
     </div>
   </div>
 </section>
 
-<!-- FAQ -->
-<section id="faq" class="faq">
+<section class="faq">
   <h2 data-fr="Questions fréquentes" data-en="Frequently asked questions">Questions fréquentes</h2>
   <div class="faq-item">
     <div class="faq-question" onclick="toggleFaq(this)">
@@ -331,10 +229,10 @@ Restant : 55 000</div><div class="bubble-time">18:00</div></div>
   </div>
   <div class="faq-item">
     <div class="faq-question" onclick="toggleFaq(this)">
-      <span data-fr="Puis-je utiliser Bilan Pro pour mon budget personnel ?" data-en="Can I use Bilan Pro for my personal budget?">Puis-je l'utiliser pour mon budget personnel ?</span>
+      <span data-fr="Quelle est la différence entre vt et cr ?" data-en="What is the difference between vt and cr?">Quelle est la différence entre vt et cr ?</span>
       <span class="arrow">▼</span>
     </div>
-    <div class="faq-answer">Oui ! Tapez "mode perso" pour activer le suivi des dépenses personnelles par catégorie (loyer, nourriture, transport...). Vous pouvez définir un budget mensuel et recevoir des alertes.</div>
+    <div class="faq-answer">vt (vente) = argent encaissé immédiatement. cr (crédit) = vente dont le client paiera plus tard. Le bénéfice augmente seulement quand le client rembourse avec rb.</div>
   </div>
   <div class="faq-item">
     <div class="faq-question" onclick="toggleFaq(this)">
@@ -357,17 +255,9 @@ Restant : 55 000</div><div class="bubble-time">18:00</div></div>
     </div>
     <div class="faq-answer">Envoyez "changer numero" depuis votre nouveau numéro et suivez les instructions. Votre ancien numéro et PIN seront demandés pour vérification.</div>
   </div>
-  <div class="faq-item">
-    <div class="faq-question" onclick="toggleFaq(this)">
-      <span data-fr="Dans quelles langues fonctionne Bilan Pro ?" data-en="What languages does Bilan Pro support?">Dans quelles langues fonctionne Bilan Pro ?</span>
-      <span class="arrow">▼</span>
-    </div>
-    <div class="faq-answer">Bilan Pro comprend le français et l'anglais. Le support du pidgin et d'autres langues locales est en cours de développement.</div>
-  </div>
 </section>
 
-<!-- CONTACT -->
-<section id="contact" class="contact">
+<section class="contact">
   <h2 data-fr="Contactez-nous" data-en="Contact us">Contactez-nous</h2>
   <p class="sub" data-fr="Question, suggestion ou problème ? On vous répond rapidement." data-en="Question, suggestion or problem? We reply quickly.">Question, suggestion ou problème ? On vous répond rapidement.</p>
   <form onsubmit="envoyerContact(event)">
@@ -386,10 +276,9 @@ Restant : 55 000</div><div class="bubble-time">18:00</div></div>
   </form>
 </section>
 
-<!-- CTA -->
 <section class="cta">
-  <h2 data-fr="Prêt à mieux gérer votre argent ?" data-en="Ready to better manage your money?">Prêt à mieux gérer votre argent ?</h2>
-  <p data-fr="Business ou budget personnel — Bilan Pro s'adapte à votre usage." data-en="Business or personal budget — Bilan Pro adapts to your needs.">Business ou budget personnel — Bilan Pro s'adapte à votre usage.</p>
+  <h2 data-fr="Prêt à mieux gérer votre business ?" data-en="Ready to better manage your business?">Prêt à mieux gérer votre business ?</h2>
+  <p data-fr="Gratuit pendant 14 jours. Aucune installation. Juste WhatsApp." data-en="Free for 14 days. No installation. Just WhatsApp.">Gratuit pendant 14 jours. Aucune installation. Juste WhatsApp.</p>
   <a href="https://wa.me/15344449308?text=Appuyer%20sur%20envoyer%20pour%20vous%20inscrire" class="btn-wa">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
     <span data-fr="Démarrer sur WhatsApp" data-en="Start on WhatsApp">Démarrer sur WhatsApp</span>
@@ -397,17 +286,10 @@ Restant : 55 000</div><div class="bubble-time">18:00</div></div>
 </section>
 
 <footer>
-  <p>© 2026 Bilan Pro — Asili Sàrl &nbsp;·&nbsp; <a href="/guide" data-fr="Guide d'utilisation" data-en="User guide">Guide d'utilisation</a> &nbsp;·&nbsp; <a href="/client" data-fr="Mon compte" data-en="My account">Mon compte</a> &nbsp;·&nbsp; <span data-fr="Tous droits réservés" data-en="All rights reserved">Tous droits réservés</span></p>
+  <p>© 2026 Bilan Pro — Asili Sàrl &nbsp;·&nbsp; <a href="/guide">Guide d'utilisation</a> &nbsp;·&nbsp; <a href="/client">Mon compte</a> &nbsp;·&nbsp; Tous droits réservés</p>
 </footer>
 
 <script>
-  function showExemple(mode, e) {
-    document.querySelectorAll('.exemples-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.exemples-tabs button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('exemple-' + mode).classList.add('active');
-    if (e && e.target) e.target.classList.add('active');
-  }
-
   function toggleFaq(el) {
     el.classList.toggle('open');
     el.nextElementSibling.classList.toggle('open');
