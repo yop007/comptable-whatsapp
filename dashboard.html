@@ -199,9 +199,9 @@
         <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Destinataires</label>
         <select id="broadcast-tier" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
           <option value="tous">Tous les utilisateurs</option>
-          <option value="gratuit">Tier Gratuit uniquement</option>
-          <option value="pro">Tier Pro uniquement</option>
-          <option value="business">Tier Business uniquement</option>
+          <option value="pro">Abonnés Pro uniquement</option>
+          <option value="essai">En période d'essai</option>
+          <option value="expire">Abonnement expiré</option>
         </select>
       </div>
       <textarea id="broadcast-text" rows="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;" placeholder="Ecris ton message ici..."></textarea>
@@ -480,15 +480,23 @@ function download(filename, content, type) {
 
     async function sendBroadcast() {
       const message = document.getElementById('broadcast-text').value.trim();
-      const tier = document.getElementById('broadcast-tier').value;
+      const tierVal = document.getElementById('broadcast-tier').value;
       if (!message) return alert('Ecris un message avant d\'envoyer.');
       const result = document.getElementById('broadcast-result');
       result.textContent = '⏳ Envoi en cours...';
+
+      const body = { message };
+      if (tierVal === 'essai' || tierVal === 'expire') {
+        body.statut = tierVal;
+      } else {
+        body.tier = tierVal;
+      }
+
       try {
         const res = await fetch('/admin/broadcast', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message, tier })
+          body: JSON.stringify(body)
         });
         const data = await res.json();
         result.textContent = `✅ Envoyé : ${data.success} | ❌ Erreurs : ${data.errors} | Total : ${data.total}`;
