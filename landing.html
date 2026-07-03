@@ -297,21 +297,33 @@ Credits accordes : 0</div><div class="bubble-time">18:00</div></div>
 
   async function envoyerContact(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
     const nom = document.getElementById('contact-nom').value.trim();
     const tel = document.getElementById('contact-tel').value.trim();
     const sujet = document.getElementById('contact-sujet').value;
     const message = document.getElementById('contact-message').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours...';
+
     try {
-      await fetch('/contact', {
+      const res = await fetch('/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nom, tel, message: '[' + sujet + '] ' + message })
       });
-      document.getElementById('contact-success').style.display = 'block';
-      e.target.reset();
-      setTimeout(() => { document.getElementById('contact-success').style.display = 'none'; }, 5000);
+      if (res.ok) {
+        document.getElementById('contact-success').style.display = 'block';
+        e.target.reset();
+        setTimeout(() => { document.getElementById('contact-success').style.display = 'none'; }, 5000);
+      } else {
+        alert('Erreur lors de l\'envoi. Reessaie.');
+      }
     } catch(err) {
       alert('Erreur technique. Reessaie.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Envoyer';
     }
   }
 
