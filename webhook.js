@@ -7,9 +7,10 @@ import ws from "ws";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 app.use(express.urlencoded({ extended: false }));
@@ -30,18 +31,6 @@ const twilioClient = twilio(
 
 const TWILIO_FROM = "whatsapp:+15344449308";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanpro2026";
-
-const mailer = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  requireTLS: true,
-  family: 4,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 app.get("/admin", (req, res) => {
   const auth = req.headers.authorization;
@@ -475,9 +464,9 @@ app.post("/contact", async (req, res) => {
   // Repondre immediatement sans attendre l'email
   res.json({ success: true });
 
-  // Envoi email en arriere-plan
-  mailer.sendMail({
-    from: process.env.EMAIL_USER,
+  // Envoi email en arriere-plan via Resend
+  resend.emails.send({
+    from: "Bilan Pro <onboarding@resend.dev>",
     to: process.env.EMAIL_USER,
     subject: "Nouveau message Bilan Pro — " + nom,
     text: "Nom : " + nom + "\nContact : " + tel + "\n\nMessage :\n" + message
