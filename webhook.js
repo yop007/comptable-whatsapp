@@ -7,6 +7,7 @@ import ws from "ws";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import nodemailer from "nodemailer";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,6 +30,14 @@ const twilioClient = twilio(
 
 const TWILIO_FROM = "whatsapp:+15344449308";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanpro2026";
+
+const mailer = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 app.get("/admin", (req, res) => {
   const auth = req.headers.authorization;
@@ -451,6 +460,27 @@ app.post("/admin/broadcast", async (req, res) => {
     }
   }
   res.json({ success, errors, total: utilisateurs.length });
+});
+
+app.post("/contact", async (req, res) => {
+  const { nom, tel, message } = req.body;
+  if (!nom || !tel || !message) return res.status(400).json({ error: "Champs manquants" });
+
+  await supabase.from("contacts").insert({ nom, telephone: tel, message });
+
+  try {
+    await mailer.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "Nouveau message Bilan Pro — " + nom,
+      text: "Nom : " + nom + "\nContact : " + tel + "\n\nMessage :\n" + message
+    });
+    console.log("Email contact envoye pour " + nom);
+  } catch (err) {
+    console.error("Erreur envoi email contact:", err.message);
+  }
+
+  res.json({ success: true });
 });
 
 // Panel client
