@@ -472,19 +472,20 @@ app.post("/contact", async (req, res) => {
 
   await supabase.from("contacts").insert({ nom, telephone: tel, message });
 
-  try {
-    await mailer.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      subject: "Nouveau message Bilan Pro — " + nom,
-      text: "Nom : " + nom + "\nContact : " + tel + "\n\nMessage :\n" + message
-    });
-    console.log("Email contact envoye pour " + nom);
-  } catch (err) {
-    console.error("Erreur envoi email contact:", err.message);
-  }
-
+  // Repondre immediatement sans attendre l'email
   res.json({ success: true });
+
+  // Envoi email en arriere-plan
+  mailer.sendMail({
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_USER,
+    subject: "Nouveau message Bilan Pro — " + nom,
+    text: "Nom : " + nom + "\nContact : " + tel + "\n\nMessage :\n" + message
+  }).then(() => {
+    console.log("Email contact envoye pour " + nom);
+  }).catch(err => {
+    console.error("Erreur envoi email contact:", err.message);
+  });
 });
 
 // Panel client
