@@ -85,6 +85,32 @@
     </div>
   </div>
 
+  <!-- SECTION PARTENAIRES -->
+  <div class="section" style="margin-top:1rem;">
+    <h2>🤝 Partenaires & Ambassadeurs</h2>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;">
+      <button onclick="document.getElementById('partenaire-modal').style.display='flex'" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Nouveau partenaire</button>
+    </div>
+    <div class="count" id="partenaire-count"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Téléphone</th>
+          <th>Type</th>
+          <th>Code</th>
+          <th>Inscrits</th>
+          <th>Statut</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="partenaire-tbody">
+        <tr><td colspan="7" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION ABONNEMENTS -->
   <div class="section" style="margin-top:1rem;">
     <h2>💳 Abonnements</h2>
     <div class="filters">
@@ -118,6 +144,7 @@
     </table>
   </div>
 
+  <!-- SECTION TRANSACTIONS -->
   <div class="section">
     <h2>Dernières transactions</h2>
     <div class="filters">
@@ -151,31 +178,6 @@
       </thead>
       <tbody id="transactions-body">
         <tr><td colspan="6" class="loading">Chargement...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- SECTION PARTENAIRES -->
-  <div class="section" style="margin-top:1rem;">
-    <h2>🤝 Partenaires & Ambassadeurs</h2>
-    <div style="display:flex;gap:10px;margin-bottom:1rem;">
-      <button onclick="document.getElementById('partenaire-modal').style.display='flex'" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Nouveau partenaire</button>
-    </div>
-    <div class="count" id="partenaire-count"></div>
-    <table>
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Téléphone</th>
-          <th>Type</th>
-          <th>Code</th>
-          <th>Inscrits</th>
-          <th>Statut</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="partenaire-tbody">
-        <tr><td colspan="7" class="loading">Chargement...</td></tr>
       </tbody>
     </table>
   </div>
