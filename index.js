@@ -41,11 +41,12 @@ Regles importantes :
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "changer numero", "nouveau numero", "changer mon numero" = changer_numero
 - "partenaire", "code partenaire", "ambassadeur" = partenaire
+- "communaute", "groupe", "rejoindre communaute", "whatsapp group" = communaute
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -526,6 +527,10 @@ export async function processMessage(telephone, message) {
     return "✅ Compte lie au partenaire : " + partenaire.nom + "\n\nMerci ! Vous beneficiez maintenant de l'accompagnement de " + partenaire.nom + ".";
   }
 
+  if (extracted.type === "communaute") {
+    return "👥 Rejoins la communauté Bilan Pro sur WhatsApp !\n\nSupport, annonces, témoignages et conseils entre utilisateurs.\n\nhttps://chat.whatsapp.com/BYEt3wElWQ0ErbkWdzWlri";
+  }
+
   if (extracted.type === "changer_numero") {
     pendingNumberChange[telephone] = { step: "ancien_numero" };
     const prefixe = telephone.replace("whatsapp:", "").substring(0, 4);
@@ -568,6 +573,7 @@ export async function processMessage(telephone, message) {
       "annuler        = Annuler une operation\n" +
       "pin oublie     = Recuperer ton PIN\n" +
       "changer numero = Transferer ton compte\n" +
+      "communaute     = Rejoindre la communaute WhatsApp\n" +
       "aide           = Afficher ce menu";
   }
 
