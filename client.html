@@ -171,6 +171,7 @@
       <button onclick="exportCSV()" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export CSV</button>
       <button onclick="exportTXT()" style="padding:8px 16px;background:#555;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export TXT</button>
       <button onclick="exportExcel()" style="padding:8px 16px;background:#1d6f42;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export Excel</button>
+      <button onclick="exportPDF()" style="padding:8px 16px;background:#c0392b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">Export PDF</button>
     </div>
     <table>
       <thead>
@@ -190,6 +191,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script>
   let userId = null;
 
@@ -352,6 +355,50 @@
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
     XLSX.writeFile(wb, 'bilan-pro-transactions.xlsx');
+  }
+
+  function exportPDF() {
+    if (!allTransactions.length) return alert('Aucune transaction a exporter.');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // En-tete
+    doc.setFontSize(18);
+    doc.setTextColor(8, 80, 65);
+    doc.text('Bilan Pro', 14, 20);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text('Export transactions — ' + new Date().toLocaleDateString('fr-FR'), 14, 28);
+
+    // Stats
+    doc.setFontSize(10);
+    doc.setTextColor(50);
+    const ventes = document.getElementById('stat-ventes').textContent;
+    const depenses = document.getElementById('stat-depenses').textContent;
+    const benefice = document.getElementById('stat-benefice').textContent;
+    const credits = document.getElementById('stat-credits').textContent;
+    doc.text('Ventes du mois : ' + ventes, 14, 38);
+    doc.text('Depenses du mois : ' + depenses, 14, 44);
+    doc.text('Benefice du mois : ' + benefice, 14, 50);
+    doc.text('Credits en cours : ' + credits, 14, 56);
+
+    // Tableau
+    doc.autoTable({
+      startY: 65,
+      head: [['Date', 'Type', 'Montant', 'Description', 'Client']],
+      body: allTransactions.map(t => [
+        new Date(t.created_at).toLocaleDateString('fr-FR'),
+        t.type.toUpperCase(),
+        t.montant.toLocaleString(),
+        t.description || '—',
+        t.client || '—'
+      ]),
+      headStyles: { fillColor: [8, 80, 65], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      styles: { fontSize: 9 }
+    });
+
+    doc.save('bilan-pro-transactions.pdf');
   }
 
   function telecharger(contenu, nom, type) {
