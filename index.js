@@ -277,7 +277,7 @@ export async function processMessage(telephone, message) {
     pendingTutorial[telephone] = { step: 1 };
 
     const prix = getPrixAbonnement(telephone);
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !\n\n14 jours d'essai gratuit. Profites-en pour tout tester !\n\nApres l'essai :\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\nPaiement : " + prix.paiement + "\n\nOn va faire un essai rapide ensemble.\n\nETAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !\n\n14 jours d'essai gratuit. Profites-en pour tout tester !\n\nApres l'essai :\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\nPaiement : " + prix.paiement + "\nApres paiement, envoie ton recu a : support@bilanpro.app\n\nOn va faire un essai rapide ensemble.\n\nETAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
