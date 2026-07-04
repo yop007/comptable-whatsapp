@@ -44,13 +44,14 @@ Regles importantes :
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "changer numero", "nouveau numero", "changer mon numero" = changer_numero
 - "partenaire", "code partenaire", "ambassadeur" = partenaire
+- "supprimer mon compte", "effacer mon compte", "delete account" = supprimer_compte
 - "mon abo", "mon abonnement", "statut abo", "quand expire" = mon_abo
 - "communaute", "groupe", "rejoindre communaute", "whatsapp group" = communaute
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "mon_abo" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "mon_abo" | "supprimer_compte" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -550,6 +551,24 @@ export async function processMessage(telephone, message) {
       .eq("telephone", telephone);
 
     return "✅ Compte lie au partenaire : " + partenaire.nom + "\n\nMerci ! Vous beneficiez maintenant de l'accompagnement de " + partenaire.nom + ".";
+  }
+
+  if (extracted.type === "supprimer_compte") {
+    pendingCancellations[telephone] = { step: "supprimer_compte" };
+    return "⚠️ Es-tu sur de vouloir supprimer ton compte ?\n\nToutes tes transactions et donnees seront effacees definitivement.\n\nReponds OUI pour confirmer ou NON pour annuler.";
+  }
+
+  if (pendingCancellations[telephone]?.step === "supprimer_compte") {
+    if (message.trim().toLowerCase() === "oui") {
+      await supabase.from("transactions").delete().eq("utilisateur_id", user.id);
+      await supabase.from("abonnements").delete().eq("utilisateur_id", user.id);
+      await supabase.from("utilisateurs").delete().eq("id", user.id);
+      delete pendingCancellations[telephone];
+      return "✅ Ton compte a ete supprime avec succes.\n\nToutes tes donnees ont ete effacees. Merci d'avoir utilise Bilan Pro.";
+    } else {
+      delete pendingCancellations[telephone];
+      return "Suppression annulee. Ton compte est conserve.";
+    }
   }
 
   if (extracted.type === "mon_abo") {
