@@ -235,8 +235,8 @@ cron.schedule("0 9 * * *", async () => {
     }
   }
 
-  const msgRappel = "Votre periode d'essai Bilan Pro expire dans {JOURS} jour(s).\n\nPour continuer a gerer votre business sans interruption :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nEnvoyez votre recu sur www.bilanpro.app apres paiement.";
-  const msgUrgent = "DERNIER JOUR ! Votre periode d'essai Bilan Pro expire aujourd'hui.\n\nVos donnees sont conservees. Pour continuer :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nSouscrivez sur www.bilanpro.app";
+  const msgRappel = "Votre periode d'essai Bilan Pro expire dans {JOURS} jour(s).\n\nPour continuer a gerer votre business sans interruption :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nApres paiement, envoyez votre recu a : support@bilanpro.app";
+  const msgUrgent = "DERNIER JOUR ! Votre periode d'essai Bilan Pro expire aujourd'hui.\n\nVos donnees sont conservees. Pour continuer :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nApres paiement, envoyez votre recu a : support@bilanpro.app";
 
   await rappelDans(5, msgRappel);
   await rappelDans(3, msgRappel);

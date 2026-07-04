@@ -255,7 +255,7 @@ export async function processMessage(telephone, message) {
 
     pendingTutorial[telephone] = { step: 1 };
 
-    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !\n\nOn va faire un essai rapide ensemble.\n\nETAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
+    return "Compte cree avec succes !\n\nBienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !\n\n14 jours d'essai gratuit. Profites-en pour tout tester !\nApres, un abonnement mensuel sera propose selon ton pays.\n\nOn va faire un essai rapide ensemble.\n\nETAPE 1/4 — Tu fais une vente ?\nTape exactement : vt 1000 test";
   }
 
   if (pendingPinRecovery[telephone]?.step === "reponse") {
@@ -384,7 +384,7 @@ export async function processMessage(telephone, message) {
     const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
     const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("utilisateur_id", user.id).gte("created_at", debutMois.toISOString());
     if (count >= 10 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
-      return "⚠️ Ta periode d'essai est terminee.\n\nPour continuer :\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nContacte-nous sur www.bilanpro.app";
+      return "⚠️ Ta periode d'essai est terminee.\n\nPour continuer :\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nPaiement : " + prix.paiement + "\n\nApres paiement, envoie ton recu a : support@bilanpro.app";
     }
     if (extracted.type === "historique") {
       return "⚠️ Ta periode d'essai est terminee.\n\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nSouscris sur www.bilanpro.app";
