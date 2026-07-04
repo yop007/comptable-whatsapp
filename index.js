@@ -547,5 +547,5 @@ export async function processMessage(telephone, message) {
 
   await saveTransaction(user.id, extracted);
   const deviseAffichee = extracted.devise ? " " + extracted.devise : "";
-  return ("Enregistre : " + extracted.type + " de " + extracted.montant?.toLocaleString() + deviseAffichee + (extracted.description ? " - " + extracted.description : "") + (extracted.client ? " (client: " + extracted.client + ")" : "")).trim();
+  return ("✅ Enregistre : " + extracted.type + " de " + extracted.montant?.toLocaleString() + deviseAffichee + (extracted.description ? " - " + extracted.description : "") + (extracted.client ? " (client: " + extracted.client + ")" : "")).trim();
 }
