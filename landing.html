@@ -89,6 +89,20 @@
     .contact button { padding: 14px; background: #085041; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
     #contact-success { display: none; text-align: center; color: #085041; font-weight: 600; padding: 1rem; background: #e1f5ee; border-radius: 8px; }
 
+    .pricing { padding: 4rem 2rem; background: #f9f9f7; }
+    .pricing h2 { font-size: 1.8rem; text-align: center; margin-bottom: 0.5rem; color: #085041; font-weight: 700; }
+    .pricing .sub { text-align: center; color: #888; margin-bottom: 2.5rem; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .plan { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid #085041; text-align: center; }
+    .plan h3 { font-size: 1rem; color: #888; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+    .plan .price { font-size: 2rem; font-weight: 800; color: #085041; margin-bottom: 0.3rem; }
+    .plan .price span { font-size: 0.9rem; font-weight: 400; color: #888; }
+    .plan .annuel { font-size: 13px; color: #25D366; font-weight: 600; margin-bottom: 1rem; }
+    .plan ul { list-style: none; text-align: left; margin-bottom: 1.5rem; }
+    .plan ul li { font-size: 13px; color: #555; padding: 5px 0; display: flex; gap: 8px; align-items: center; }
+    .plan ul li::before { content: "✓"; color: #085041; font-weight: 700; }
+    .plan .zone { font-size: 11px; background: #e1f5ee; color: #085041; padding: 3px 10px; border-radius: 12px; display: inline-block; margin-bottom: 1rem; }
+    @media (max-width: 640px) { .pricing-grid { grid-template-columns: 1fr; } }
     .cta { background: #085041; color: white; padding: 4rem 2rem; text-align: center; }
     .cta h2 { font-size: 1.8rem; margin-bottom: 1rem; font-weight: 700; }
     .cta p { opacity: 0.9; margin-bottom: 2rem; }
@@ -274,6 +288,49 @@ Credits accordes : 0</div><div class="bubble-time">18:00</div></div>
     <button type="submit" data-fr="Envoyer" data-en="Send">Envoyer</button>
     <div id="contact-success">✅ Message envoyé ! Nous vous répondrons bientôt.</div>
   </form>
+</section>
+
+<section class="pricing">
+  <h2 data-fr="Tarifs" data-en="Pricing">Tarifs</h2>
+  <p class="sub" data-fr="14 jours gratuits · Sans carte bancaire · Prix adaptés à votre pays" data-en="14 days free · No credit card · Prices adapted to your country">14 jours gratuits · Sans carte bancaire · Prix adaptés à votre pays</p>
+  <div class="pricing-grid">
+    <div class="plan">
+      <div class="zone">🇬🇳 Guinée</div>
+      <h3 data-fr="Mensuel" data-en="Monthly">Mensuel</h3>
+      <div class="price">10 000 <span>GNF/mois</span></div>
+      <div class="annuel" data-fr="Annuel : 100 000 GNF (2 mois offerts)" data-en="Annual: 100,000 GNF (2 months free)">Annuel : 100 000 GNF (2 mois offerts)</div>
+      <ul>
+        <li data-fr="Transactions illimitées" data-en="Unlimited transactions">Transactions illimitées</li>
+        <li data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</li>
+        <li data-fr="Suivi crédits clients" data-en="Customer credit tracking">Suivi crédits clients</li>
+        <li data-fr="Panel client web" data-en="Web client panel">Panel client web</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <div class="zone">🇮🇬 Zone FCFA</div>
+      <h3 data-fr="Mensuel" data-en="Monthly">Mensuel</h3>
+      <div class="price">2 000 <span>FCFA/mois</span></div>
+      <div class="annuel" data-fr="Annuel : 20 000 FCFA (2 mois offerts)" data-en="Annual: 20,000 FCFA (2 months free)">Annuel : 20 000 FCFA (2 mois offerts)</div>
+      <ul>
+        <li data-fr="Transactions illimitées" data-en="Unlimited transactions">Transactions illimitées</li>
+        <li data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</li>
+        <li data-fr="Suivi crédits clients" data-en="Customer credit tracking">Suivi crédits clients</li>
+        <li data-fr="Panel client web" data-en="Web client panel">Panel client web</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <div class="zone">🌍 Autres pays</div>
+      <h3 data-fr="Mensuel" data-en="Monthly">Mensuel</h3>
+      <div class="price">4.99 <span>USD/mois</span></div>
+      <div class="annuel" data-fr="Annuel : 49.90 USD (2 mois offerts)" data-en="Annual: 49.90 USD (2 months free)">Annuel : 49.90 USD (2 mois offerts)</div>
+      <ul>
+        <li data-fr="Transactions illimitées" data-en="Unlimited transactions">Transactions illimitées</li>
+        <li data-fr="Bilans automatiques" data-en="Automatic reports">Bilans automatiques</li>
+        <li data-fr="Suivi crédits clients" data-en="Customer credit tracking">Suivi crédits clients</li>
+        <li data-fr="Panel client web" data-en="Web client panel">Panel client web</li>
+      </ul>
+    </div>
+  </div>
 </section>
 
 <section class="cta">

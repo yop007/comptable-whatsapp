@@ -158,7 +158,7 @@ function getPrixAbonnement(telephone) {
   if (tel.startsWith("+224")) return { mensuel: "10 000 GNF", annuel: "100 000 GNF (2 mois offerts)" };
   const zoneFCFA = ["+237","+221","+225","+223","+226","+228","+229","+227","+222"];
   if (zoneFCFA.some(p => tel.startsWith(p))) return { mensuel: "2 000 FCFA", annuel: "20 000 FCFA (2 mois offerts)" };
-  return { mensuel: "3 USD", annuel: "30 USD (2 mois offerts)" };
+  return { mensuel: "4.99 USD", annuel: "49.90 USD (2 mois offerts)" };
 }
 
 async function getTier(userId) {
