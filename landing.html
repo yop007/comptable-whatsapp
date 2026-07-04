@@ -22,9 +22,23 @@
     nav .logo .logo-top span { font-weight: 200; }
     nav .logo .logo-bar { width: 100%; height: 2px; background: #25D366; border-radius: 1px; margin-top: 2px; }
     nav .logo .logo-sub { font-size: 0.6rem; font-weight: 300; letter-spacing: 4px; color: rgba(255,255,255,0.8); margin-top: 3px; }
+    nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    nav .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    nav .nav-links a:hover { color: white; }
+    nav .nav-right { display: flex; align-items: center; gap: 1rem; }
     nav .lang { display: flex; gap: 6px; }
     nav .lang button { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; }
     nav .lang button.active { background: white; color: #085041; font-weight: 600; }
+    nav .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-direction: column; gap: 5px; }
+    nav .hamburger span { display: block; width: 24px; height: 2px; background: white; border-radius: 2px; transition: all 0.3s; }
+    nav .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: #085041; flex-direction: column; padding: 1rem 2rem; gap: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 99; }
+    nav .mobile-menu.open { display: flex; }
+    nav .mobile-menu a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    nav .mobile-menu a:last-child { border-bottom: none; }
+    @media (max-width: 768px) {
+      nav .nav-links { display: none; }
+      nav .hamburger { display: flex; }
+    }
 
     .hero { background: linear-gradient(135deg, #085041 0%, #0F6E56 100%); color: white; padding: 5rem 2rem 4rem; text-align: center; }
     .hero .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 1.5rem; }
@@ -127,11 +141,33 @@
     <div class="logo-bar"></div>
     <div class="logo-sub">PRO</div>
   </a>
-  <div class="lang">
-    <button class="active" onclick="setLang('fr')">FR</button>
-    <button onclick="setLang('en')">EN</button>
+  <div class="nav-links">
+    <a href="#fonctionnalites" data-fr="Fonctionnalités" data-en="Features">Fonctionnalités</a>
+    <a href="#comment" data-fr="Comment ça marche" data-en="How it works">Comment ça marche</a>
+    <a href="#exemples" data-fr="Exemples" data-en="Examples">Exemples</a>
+    <a href="#pricing" data-fr="Tarifs" data-en="Pricing">Tarifs</a>
+    <a href="#faq" data-fr="FAQ" data-en="FAQ">FAQ</a>
+    <a href="#contact" data-fr="Contact" data-en="Contact">Contact</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang">
+      <button class="active" onclick="setLang('fr')">FR</button>
+      <button onclick="setLang('en')">EN</button>
+    </div>
+    <button class="hamburger" onclick="toggleMenu()" id="hamburger">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#fonctionnalites" onclick="closeMenu()">Fonctionnalités</a>
+  <a href="#comment" onclick="closeMenu()">Comment ça marche</a>
+  <a href="#exemples" onclick="closeMenu()">Exemples</a>
+  <a href="#pricing" onclick="closeMenu()">Tarifs</a>
+  <a href="#faq" onclick="closeMenu()">FAQ</a>
+  <a href="#contact" onclick="closeMenu()">Contact</a>
+</div>
 
 <section class="hero">
   <div class="badge">
@@ -298,7 +334,7 @@ Credits accordes : 0</div><div class="bubble-time">18:00</div></div>
   </form>
 </section>
 
-<section class="pricing">
+<section id="pricing" class="pricing">
   <h2 data-fr="Tarifs" data-en="Pricing">Tarifs</h2>
   <p class="sub" data-fr="14 jours gratuits · Sans carte bancaire · Prix adaptés à votre pays" data-en="14 days free · No credit card · Prices adapted to your country">14 jours gratuits · Sans carte bancaire · Prix adaptés à votre pays</p>
   <div class="pricing-grid">
@@ -355,6 +391,15 @@ Credits accordes : 0</div><div class="bubble-time">18:00</div></div>
 </footer>
 
 <script>
+  function toggleMenu() {
+    const menu = document.getElementById('mobile-menu');
+    menu.classList.toggle('open');
+  }
+
+  function closeMenu() {
+    document.getElementById('mobile-menu').classList.remove('open');
+  }
+
   function toggleFaq(el) {
     el.classList.toggle('open');
     el.nextElementSibling.classList.toggle('open');
