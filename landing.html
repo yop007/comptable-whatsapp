@@ -31,10 +31,10 @@
     nav .lang button.active { background: white; color: #085041; font-weight: 600; }
     nav .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-direction: column; gap: 5px; }
     nav .hamburger span { display: block; width: 24px; height: 2px; background: white; border-radius: 2px; transition: all 0.3s; }
-    nav .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: #085041; flex-direction: column; padding: 1rem 2rem; gap: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 99; }
-    nav .mobile-menu.open { display: flex; }
-    nav .mobile-menu a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    nav .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu { display: none; position: fixed; top: 60px; left: 0; right: 0; background: #085041; flex-direction: column; padding: 1rem 2rem; gap: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 99; }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 15px; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .mobile-menu a:last-child { border-bottom: none; }
     @media (max-width: 768px) {
       nav .nav-links { display: none; }
       nav .hamburger { display: flex; }
