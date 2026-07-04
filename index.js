@@ -40,11 +40,12 @@ Regles importantes :
 - "non", "no" = refuser
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "changer numero", "nouveau numero", "changer mon numero" = changer_numero
+- "partenaire", "code partenaire", "ambassadeur" = partenaire
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -498,6 +499,31 @@ export async function processMessage(telephone, message) {
   if (extracted.type === "refuser") {
     delete pendingCancellations[user.telephone];
     return "Suppression annulee. Transaction conservee.";
+  }
+
+  if (extracted.type === "partenaire") {
+    // Extraire le code du message
+    const code = message.trim().toUpperCase().split(/\s+/).pop();
+    if (!code || code === "PARTENAIRE" || code === "AMBASSADEUR") {
+      return "Pour lier votre compte a un partenaire, envoyez :\npartenaire [CODE]\n\nExemple : partenaire BP-ALPHA";
+    }
+
+    const { data: partenaire } = await supabase
+      .from("partenaires")
+      .select("*")
+      .eq("code", code)
+      .eq("actif", true)
+      .single();
+
+    if (!partenaire) {
+      return "Code partenaire invalide ou inactif. Verifie le code et reessaie.";
+    }
+
+    await supabase.from("utilisateurs")
+      .update({ partenaire_code: code })
+      .eq("telephone", telephone);
+
+    return "✅ Compte lie au partenaire : " + partenaire.nom + "\n\nMerci ! Vous beneficiez maintenant de l'accompagnement de " + partenaire.nom + ".";
   }
 
   if (extracted.type === "changer_numero") {

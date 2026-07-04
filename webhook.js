@@ -529,6 +529,38 @@ app.post("/contact", async (req, res) => {
   });
 });
 
+app.get("/admin/partenaires", async (req, res) => {
+  const { data } = await supabase
+    .from("partenaires")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const partenaires = await Promise.all((data || []).map(async p => {
+    const { count } = await supabase
+      .from("utilisateurs")
+      .select("*", { count: "exact", head: true })
+      .eq("partenaire_code", p.code);
+    return { ...p, inscrits: count || 0 };
+  }));
+
+  res.json(partenaires);
+});
+
+app.post("/admin/partenaires", async (req, res) => {
+  const { nom, telephone, type, code } = req.body;
+  if (!nom || !code) return res.status(400).json({ error: "Nom et code obligatoires" });
+
+  const { error } = await supabase.from("partenaires").insert({ nom, telephone, type, code });
+  if (error) return res.status(400).json({ error: error.message });
+  res.json({ success: true });
+});
+
+app.patch("/admin/partenaires/:id", async (req, res) => {
+  const { actif } = req.body;
+  await supabase.from("partenaires").update({ actif }).eq("id", req.params.id);
+  res.json({ success: true });
+});
+
 // Panel client
 app.get("/client", (req, res) => {
   res.sendFile(join(__dirname, "client.html"));

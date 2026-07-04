@@ -155,6 +155,64 @@
     </table>
   </div>
 
+  <!-- SECTION PARTENAIRES -->
+  <div class="section" style="margin-top:1rem;">
+    <h2>🤝 Partenaires & Ambassadeurs</h2>
+    <div style="display:flex;gap:10px;margin-bottom:1rem;">
+      <button onclick="document.getElementById('partenaire-modal').style.display='flex'" style="padding:8px 16px;background:#085041;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">+ Nouveau partenaire</button>
+    </div>
+    <div class="count" id="partenaire-count"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Téléphone</th>
+          <th>Type</th>
+          <th>Code</th>
+          <th>Inscrits</th>
+          <th>Statut</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="partenaire-tbody">
+        <tr><td colspan="7" class="loading">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL PARTENAIRE -->
+  <div id="partenaire-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999;">
+    <div style="background:white;border-radius:12px;padding:2rem;width:420px;max-width:90vw;">
+      <h3 style="margin-bottom:1.5rem;color:#085041;">🤝 Nouveau partenaire</h3>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Nom</label>
+        <input type="text" id="part-nom" placeholder="Nom du partenaire" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Téléphone</label>
+        <input type="text" id="part-tel" placeholder="+237XXXXXXXXX" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Type</label>
+        <select id="part-type" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;">
+          <option value="partenaire">Partenaire</option>
+          <option value="ambassadeur">Ambassadeur</option>
+        </select>
+      </div>
+      <div style="margin-bottom:1.5rem;">
+        <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">Code unique</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="part-code" placeholder="BP-ALPHA" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;text-transform:uppercase;">
+          <button onclick="genererCode()" style="padding:10px 14px;background:#f0f0f0;border:none;border-radius:8px;cursor:pointer;font-size:13px;">Générer</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="document.getElementById('partenaire-modal').style.display='none'" style="padding:10px 20px;border:1px solid #ddd;border-radius:8px;cursor:pointer;background:white;">Annuler</button>
+        <button onclick="savePartenaire()" style="padding:10px 20px;background:#085041;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL ABONNEMENT -->
   <div id="abo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:999;">
     <div style="background:white;border-radius:12px;padding:2rem;width:420px;max-width:90vw;">
@@ -504,6 +562,82 @@ function download(filename, content, type) {
       }
     }
 
+    function genererCode() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const code = 'BP-' + Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      document.getElementById('part-code').value = code;
+    }
+
+    async function loadPartenaires() {
+      const tbody = document.getElementById('partenaire-tbody');
+      try {
+        const res = await fetch('/admin/partenaires');
+        const data = await res.json();
+        document.getElementById('partenaire-count').textContent = data.length + ' partenaire(s)';
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">Aucun partenaire</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map(p => {
+          const typeBadge = p.type === 'ambassadeur'
+            ? '<span class="badge" style="background:#fff8e1;color:#e67e22;">Ambassadeur</span>'
+            : '<span class="badge" style="background:#e1f5ee;color:#085041;">Partenaire</span>';
+          const statutBadge = p.actif
+            ? '<span class="badge vente">Actif</span>'
+            : '<span class="badge depense">Inactif</span>';
+          return `<tr>
+            <td>${p.nom}</td>
+            <td>${p.telephone || '—'}</td>
+            <td>${typeBadge}</td>
+            <td><strong>${p.code}</strong></td>
+            <td>${p.inscrits || 0}</td>
+            <td>${statutBadge}</td>
+            <td>
+              <button onclick="togglePartenaire('${p.id}', ${p.actif})" style="padding:5px 12px;background:${p.actif ? '#e74c3c' : '#085041'};color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">${p.actif ? 'Désactiver' : 'Activer'}</button>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch(e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">Erreur de chargement</td></tr>';
+      }
+    }
+
+    async function savePartenaire() {
+      const nom = document.getElementById('part-nom').value.trim();
+      const tel = document.getElementById('part-tel').value.trim();
+      const type = document.getElementById('part-type').value;
+      const code = document.getElementById('part-code').value.trim().toUpperCase();
+      if (!nom || !code) return alert('Nom et code obligatoires.');
+      try {
+        const res = await fetch('/admin/partenaires', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nom, telephone: tel, type, code })
+        });
+        if (res.ok) {
+          document.getElementById('partenaire-modal').style.display = 'none';
+          document.getElementById('part-nom').value = '';
+          document.getElementById('part-tel').value = '';
+          document.getElementById('part-code').value = '';
+          loadPartenaires();
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Erreur lors de la sauvegarde.');
+        }
+      } catch(e) {
+        alert('Erreur technique.');
+      }
+    }
+
+    async function togglePartenaire(id, actif) {
+      await fetch('/admin/partenaires/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actif: !actif })
+      });
+      loadPartenaires();
+    }
+
     function deconnexion() {
       // Force la deconnexion en envoyant de mauvaises credentials
       fetch('/admin', {
@@ -515,6 +649,7 @@ function download(filename, content, type) {
 
     loadData();
     loadAbonnements();
+    loadPartenaires();
     setInterval(loadData, 30000);
 
     // Enregistrement PWA service worker
