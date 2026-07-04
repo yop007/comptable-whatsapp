@@ -437,14 +437,11 @@
     // Stats
     doc.setFontSize(10);
     doc.setTextColor(50);
-    const ventes = document.getElementById('stat-ventes').textContent;
-    const depenses = document.getElementById('stat-depenses').textContent;
-    const benefice = document.getElementById('stat-benefice').textContent;
-    const credits = document.getElementById('stat-credits').textContent;
-    doc.text('Ventes du mois : ' + ventes, 14, 38);
-    doc.text('Depenses du mois : ' + depenses, 14, 44);
-    doc.text('Benefice du mois : ' + benefice, 14, 50);
-    doc.text('Credits en cours : ' + credits, 14, 56);
+    const cleanNum = (id) => Number(document.getElementById(id).textContent.replace(/[^0-9]/g, '')).toLocaleString('fr-FR');
+    doc.text('Ventes du mois : ' + cleanNum('stat-ventes'), 14, 38);
+    doc.text('Depenses du mois : ' + cleanNum('stat-depenses'), 14, 44);
+    doc.text('Benefice du mois : ' + cleanNum('stat-benefice'), 14, 50);
+    doc.text('Credits en cours : ' + cleanNum('stat-credits'), 14, 56);
 
     // Tableau
     doc.autoTable({
