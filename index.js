@@ -174,10 +174,10 @@ async function getSoldeClient(userId, client) {
 
 function getPrixAbonnement(telephone) {
   const tel = telephone.replace("whatsapp:", "");
-  if (tel.startsWith("+224")) return { mensuel: "10 000 GNF", annuel: "100 000 GNF (2 mois offerts)" };
+  if (tel.startsWith("+224")) return { mensuel: "10 000 GNF", annuel: "100 000 GNF (2 mois offerts)", paiement: "Orange Money Guinee : +224 613 549 205" };
   const zoneFCFA = ["+237","+221","+225","+223","+226","+228","+229","+227","+222"];
-  if (zoneFCFA.some(p => tel.startsWith(p))) return { mensuel: "2 000 FCFA", annuel: "20 000 FCFA (2 mois offerts)" };
-  return { mensuel: "4.99 USD", annuel: "49.90 USD (2 mois offerts)" };
+  if (zoneFCFA.some(p => tel.startsWith(p))) return { mensuel: "2 000 FCFA", annuel: "20 000 FCFA (2 mois offerts)", paiement: "Orange Money Cameroun : +237 686 895 796" };
+  return { mensuel: "4.99 USD", annuel: "49.90 USD (2 mois offerts)", paiement: "Revolut : https://revolut.me/martin2dvf" };
 }
 
 async function getTier(userId) {
