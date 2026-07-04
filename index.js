@@ -31,6 +31,9 @@ Regles importantes :
 - "dp", "dep", "depense" = depense
 - "cr", "credit" = credit
 - "rb", "remb" = remboursement
+- "bilan trimestriel", "blt" = bilan, periode: trimestre
+- "bilan semestriel", "bls" = bilan, periode: semestre
+- "bilan annuel", "bla" = bilan, periode: annuel
 - "blj", "bilan jour" = bilan, periode: jour
 - "blm", "bilan mois" = bilan, periode: mois
 - "qui me doit", "liste des credits", "mes credits", "liste credits", "lc" = credits_liste
@@ -51,7 +54,7 @@ Retourne ce JSON :
   "devise": string | null,
   "description": string | null,
   "client": string | null,
-  "periode": "jour" | "mois" | null
+  "periode": "jour" | "mois" | "trimestre" | "semestre" | "annuel" | null
 }
 Aucun texte avant ou apres le JSON.`;
 
@@ -114,7 +117,21 @@ async function saveTransaction(userId, extracted) {
 
 async function getBilan(userId, periode) {
   const from = new Date();
-  if (periode === "mois") from.setDate(1);
+  if (periode === "mois") {
+    from.setDate(1);
+  } else if (periode === "trimestre") {
+    const mois = from.getMonth();
+    const debutTrimestre = Math.floor(mois / 3) * 3;
+    from.setMonth(debutTrimestre);
+    from.setDate(1);
+  } else if (periode === "semestre") {
+    const debutSemestre = from.getMonth() < 6 ? 0 : 6;
+    from.setMonth(debutSemestre);
+    from.setDate(1);
+  } else if (periode === "annuel") {
+    from.setMonth(0);
+    from.setDate(1);
+  }
   from.setHours(0, 0, 0, 0);
 
   const { data, error } = await supabase
@@ -405,7 +422,14 @@ export async function processMessage(telephone, message) {
 
     const bilan = await getBilan(user.id, extracted.periode || "jour");
     const devise = extracted.devise || "";
-    return "Bilan " + (extracted.periode === "mois" ? "du mois" : "du jour") + " :\n" +
+    const periodeLabel = {
+      jour: "du jour",
+      mois: "du mois",
+      trimestre: "du trimestre",
+      semestre: "du semestre",
+      annuel: "de l annee"
+    }[extracted.periode || "jour"] || "du jour";
+    return "Bilan " + periodeLabel + " :\n" +
       "Ventes : " + bilan.ventes.toLocaleString() + " " + devise + "\n" +
       "Depenses : " + bilan.depenses.toLocaleString() + " " + devise + "\n" +
       "Benefice : " + bilan.benefice.toLocaleString() + " " + devise + "\n" +
@@ -567,6 +591,9 @@ export async function processMessage(telephone, message) {
       "CONSULTER :\n" +
       "blj = Bilan du jour\n" +
       "blm = Bilan du mois\n" +
+      "blt = Bilan du trimestre\n" +
+      "bls = Bilan du semestre\n" +
+      "bla = Bilan de l annee\n" +
       "lc  = Liste des credits en cours\n" +
       "ht  = Historique (5 dernieres operations)\n\n" +
       "AUTRES :\n" +
