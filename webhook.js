@@ -529,6 +529,15 @@ app.post("/contact", async (req, res) => {
   });
 });
 
+app.get("/admin/contacts", async (req, res) => {
+  const { data } = await supabase
+    .from("contacts")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  res.json(data || []);
+});
+
 app.get("/admin/partenaires", async (req, res) => {
   const { data } = await supabase
     .from("partenaires")
