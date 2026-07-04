@@ -147,6 +147,21 @@
     </div>
   </div>
 
+  <!-- Graphiques -->
+  <div class="section">
+    <h2>Apercu visuel</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+      <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Répartition du mois</div>
+        <div style="position:relative;height:200px;"><canvas id="chart-repartition"></canvas></div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div style="font-size:13px;color:#555;margin-bottom:1rem;font-weight:600;">Evolution des 30 derniers jours</div>
+        <div style="position:relative;height:200px;"><canvas id="chart-evolution"></canvas></div>
+      </div>
+    </div>
+  </div>
+
   <div class="section">
     <h2>Historique des transactions</h2>
     <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;">
@@ -186,6 +201,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
   let userId = null;
 
@@ -236,6 +252,8 @@
   }
 
   let allTransactions = [];
+  let chartRepartition = null;
+  let chartEvolution = null;
 
   async function chargerDonnees() {
     try {
@@ -251,9 +269,66 @@
 
       allTransactions = data.transactions;
       afficherTransactions(allTransactions);
+      renderGraphiques(data);
     } catch (err) {
       console.error(err);
     }
+  }
+
+  function renderGraphiques(data) {
+    // Graphique repartition donut
+    const ventes = data.stats.ventes;
+    const depenses = data.stats.depenses;
+    const credits = data.stats.credits > 0 ? data.stats.credits : 0;
+
+    if (chartRepartition) chartRepartition.destroy();
+    chartRepartition = new Chart(document.getElementById('chart-repartition'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Ventes', 'Depenses', 'Credits'],
+        datasets: [{ data: [ventes, depenses, credits], backgroundColor: ['#085041', '#e74c3c', '#f39c12'], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+    });
+
+    // Graphique evolution 30 jours
+    const maintenant = new Date();
+    const jours = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(maintenant);
+      d.setDate(d.getDate() - i);
+      const key = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+      jours[key] = { ventes: 0, depenses: 0 };
+    }
+    for (const t of (data.transactions || [])) {
+      const d = new Date(t.created_at);
+      const key = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+      if (jours[key]) {
+        if (t.type === 'vente') jours[key].ventes += t.montant;
+        if (t.type === 'depense') jours[key].depenses += t.montant;
+      }
+    }
+    const labels = Object.keys(jours);
+    const ventesData = labels.map(k => jours[k].ventes);
+    const depensesData = labels.map(k => jours[k].depenses);
+
+    if (chartEvolution) chartEvolution.destroy();
+    chartEvolution = new Chart(document.getElementById('chart-evolution'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Ventes', data: ventesData, backgroundColor: '#085041', borderRadius: 3 },
+          { label: 'Depenses', data: depensesData, backgroundColor: '#e74c3c', borderRadius: 3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+        scales: { x: { ticks: { maxTicksLimit: 8, font: { size: 10 } } }, y: { beginAtZero: true } }
+      }
+    });
   }
 
   function filtrer() {
