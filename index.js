@@ -44,12 +44,13 @@ Regles importantes :
 - "dernieres transactions", "historique", "mes transactions", "liste transactions", "ht" = historique
 - "changer numero", "nouveau numero", "changer mon numero" = changer_numero
 - "partenaire", "code partenaire", "ambassadeur" = partenaire
+- "mon abo", "mon abonnement", "statut abo", "quand expire" = mon_abo
 - "communaute", "groupe", "rejoindre communaute", "whatsapp group" = communaute
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "mon_abo" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -551,6 +552,31 @@ export async function processMessage(telephone, message) {
     return "✅ Compte lie au partenaire : " + partenaire.nom + "\n\nMerci ! Vous beneficiez maintenant de l'accompagnement de " + partenaire.nom + ".";
   }
 
+  if (extracted.type === "mon_abo") {
+    const { data: abo } = await supabase
+      .from("abonnements")
+      .select("*")
+      .eq("utilisateur_id", user.id)
+      .single();
+
+    if (!abo) return "Aucun abonnement trouve. Contacte-nous sur support@bilanpro.app.";
+
+    const dateFin = abo.date_fin ? new Date(abo.date_fin).toLocaleDateString('fr-FR') : 'Illimite';
+    const joursRestants = abo.date_fin ? Math.ceil((new Date(abo.date_fin) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+    const statut = !abo.actif ? 'Expire' : joursRestants !== null && joursRestants <= 0 ? 'Expire' : abo.tier === 'gratuit' ? 'Essai gratuit' : 'Pro actif';
+    const prix = getPrixAbonnement(telephone);
+
+    let msg = "Mon abonnement Bilan Pro :\n\n";
+    msg += "Statut : " + statut + "\n";
+    msg += "Tier : " + (abo.tier === 'pro' ? 'Pro' : 'Gratuit (essai)') + "\n";
+    msg += "Expire le : " + dateFin + "\n";
+    if (joursRestants !== null && joursRestants > 0) msg += "Jours restants : " + joursRestants + "\n";
+    if (statut === 'Essai gratuit' || statut === 'Expire') {
+      msg += "\nPour souscrire :\nMensuel : " + prix.mensuel + "\nAnnuel : " + prix.annuel + "\nPaiement : " + prix.paiement + "\n\nApres paiement : support@bilanpro.app";
+    }
+    return msg;
+  }
+
   if (extracted.type === "communaute") {
     return "👥 Rejoins la communauté Bilan Pro sur WhatsApp !\n\nSupport, annonces, témoignages et conseils entre utilisateurs.\n\nhttps://chat.whatsapp.com/BYEt3wElWQ0ErbkWdzWlri";
   }
@@ -598,6 +624,7 @@ export async function processMessage(telephone, message) {
       "ht  = Historique (5 dernieres operations)\n\n" +
       "AUTRES :\n" +
       "annuler        = Annuler une operation\n" +
+      "mon abo        = Voir mon abonnement\n" +
       "pin oublie     = Recuperer ton PIN\n" +
       "changer numero = Transferer ton compte\n" +
       "communaute     = Rejoindre la communaute WhatsApp\n" +
