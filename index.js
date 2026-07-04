@@ -153,6 +153,14 @@ async function getSoldeClient(userId, client) {
   return credits - remboursements;
 }
 
+function getPrixAbonnement(telephone) {
+  const tel = telephone.replace("whatsapp:", "");
+  if (tel.startsWith("+224")) return { mensuel: "10 000 GNF", annuel: "100 000 GNF (2 mois offerts)" };
+  const zoneFCFA = ["+237","+221","+225","+223","+226","+228","+229","+227","+222"];
+  if (zoneFCFA.some(p => tel.startsWith(p))) return { mensuel: "2 000 FCFA", annuel: "20 000 FCFA (2 mois offerts)" };
+  return { mensuel: "3 USD", annuel: "30 USD (2 mois offerts)" };
+}
+
 async function getTier(userId) {
   const { data } = await supabase
     .from("abonnements")
@@ -372,13 +380,14 @@ export async function processMessage(telephone, message) {
 
   // Restrictions apres expiration
   if (tier === "expire") {
+    const prix = getPrixAbonnement(telephone);
     const debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
     const { count } = await supabase.from("transactions").select("*", { count: "exact", head: true }).eq("utilisateur_id", user.id).gte("created_at", debutMois.toISOString());
     if (count >= 10 && ["vente","depense","credit","remboursement"].includes(extracted.type)) {
-      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour souscrire a un abonnement et continuer.";
+      return "⚠️ Ta periode d'essai est terminee.\n\nPour continuer :\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nContacte-nous sur www.bilanpro.app";
     }
     if (extracted.type === "historique") {
-      return "⚠️ Ta periode d'essai est terminee.\n\nContacte-nous sur www.bilanpro.app pour continuer.";
+      return "⚠️ Ta periode d'essai est terminee.\n\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nSouscris sur www.bilanpro.app";
     }
   }
 
