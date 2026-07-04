@@ -18,6 +18,7 @@
     .step h2 .num { background: #085041; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
     .step p { color: #555; line-height: 1.6; margin-bottom: 1rem; }
     .step img { max-width: 350px; width: 100%; border-radius: 8px; border: 1px solid #eee; margin-top: 0.5rem; display: block; }
+    .message-box { background: #f0f7f4; border-left: 4px solid #085041; border-radius: 0 8px 8px 0; padding: 1rem 1.2rem; margin-top: 0.8rem; font-size: 14px; color: #333; line-height: 1.7; white-space: pre-line; }
     .commandes { background: #f9f9f7; border-radius: 8px; padding: 1rem; font-size: 13px; color: #333; line-height: 2; margin-top: 0.5rem; }
     .commandes strong { color: #085041; }
   </style>
@@ -41,7 +42,7 @@
 
   <div class="step">
     <h2><span class="num">2</span>Créer votre PIN</h2>
-    <p>Bilan Pro vous accueille et vous demande de créer un code PIN à 4 chiffres, puis de le confirmer. Ce code protège votre compte et permet de le récupérer en cas de changement de numéro.</p>
+    <p>Bilan Pro vous accueille et vous demande de créer un code PIN à 4 chiffres, puis de le confirmer. Ce code protège votre compte.</p>
     <img src="/images/02-pin.png" alt="Création du PIN">
   </div>
 
@@ -52,42 +53,48 @@
   </div>
 
   <div class="step">
-    <h2><span class="num">4</span>Découvrir les commandes</h2>
-    <p>Tapez "aide" ou "?" à tout moment pour afficher la liste complète des commandes disponibles.</p>
-    <img src="/images/04-mode.png" alt="Menu d'aide">
+    <h2><span class="num">4</span>Message de bienvenue</h2>
+    <p>Une fois le compte créé, vous recevez ce message de bienvenue suivi d'un tutoriel guidé en 4 étapes :</p>
+    <div class="message-box">Compte cree avec succes !
+
+Bienvenue sur Bilan Pro, ton assistant comptable sur WhatsApp !
+
+14 jours d'essai gratuit. Profites-en pour tout tester !
+Apres, un abonnement mensuel sera propose selon ton pays.
+
+On va faire un essai rapide ensemble.
+
+ETAPE 1/4 — Tu fais une vente ?
+Tape exactement : vt 1000 test</div>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">5</span>Tutoriel guidé</h2>
+    <p>Bilan Pro vous guide à travers 4 exemples pratiques — vente, dépense, crédit et bilan du jour. Suivez chaque étape pour apprendre les commandes de base.</p>
+    <img src="/images/04-mode.png" alt="Tutoriel et commandes">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">6</span>Enregistrer une transaction</h2>
+    <p>Utilisez les abréviations suivies du montant et d'une description. Bilan Pro enregistre instantanément et confirme par message.</p>
+    <img src="/images/05-transactions.png" alt="Enregistrement de transactions">
     <div class="commandes">
-      <strong>ENREGISTRER :</strong><br>
-      vt = Vente (argent reçu immédiatement)<br>
-      dp = Dépense<br>
-      cr = Crédit client (argent à recevoir)<br>
-      rb = Remboursement (client qui paie sa dette)<br><br>
-      <strong>CONSULTER :</strong><br>
-      blj = Bilan du jour<br>
-      blm = Bilan du mois<br>
-      lc = Liste des crédits en cours<br>
-      ht = Historique (5 dernières opérations)<br><br>
-      <strong>AUTRES :</strong><br>
-      annuler = Annuler une opération<br>
-      pin oublie = Récupérer ton PIN<br>
-      changer numero = Transférer ton compte
+      <strong>vt</strong> = Vente (argent reçu immédiatement)<br>
+      <strong>dp</strong> = Dépense<br>
+      <strong>cr</strong> = Crédit client (argent à recevoir)<br>
+      <strong>rb</strong> = Remboursement (client qui paie sa dette)
     </div>
   </div>
 
   <div class="step">
-    <h2><span class="num">5</span>Enregistrer une transaction</h2>
-    <p>Utilisez les abréviations suivies du montant et d'une description. Bilan Pro enregistre instantanément et confirme par message.</p>
-    <img src="/images/05-transactions.png" alt="Enregistrement de transactions">
-  </div>
-
-  <div class="step">
-    <h2><span class="num">6</span>Consulter votre bilan</h2>
-    <p>Tapez <strong>blj</strong> pour le bilan du jour ou <strong>blm</strong> pour le bilan du mois. Vous recevez également des bilans automatiques chaque semaine et chaque mois.</p>
+    <h2><span class="num">7</span>Consulter votre bilan</h2>
+    <p>Tapez <strong>blj</strong> pour le bilan du jour, <strong>blm</strong> pour le mois, <strong>blt</strong> pour le trimestre, <strong>bls</strong> pour le semestre, <strong>bla</strong> pour l'année.</p>
     <img src="/images/06-bilan.png" alt="Bilan du jour et du mois">
   </div>
 
   <div class="step">
-    <h2><span class="num">7</span>Accéder au panel client</h2>
-    <p>Rendez-vous sur <a href="/client" style="color:#085041;">www.bilanpro.app/client</a> pour vous connecter avec votre numéro et votre PIN. Vous y retrouverez vos statistiques, l'historique complet avec filtres, et pourrez exporter en CSV, TXT ou Excel.</p>
+    <h2><span class="num">8</span>Accéder au panel client</h2>
+    <p>Rendez-vous sur <a href="/client" style="color:#085041;">www.bilanpro.app/client</a> pour vous connecter avec votre numéro et votre PIN. Accédez à vos statistiques, l'historique complet et exportez en Excel ou PDF.</p>
     <img src="/images/07-client.jpg" alt="Panel client web Bilan Pro">
   </div>
 
