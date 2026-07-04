@@ -35,10 +35,25 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bilanpro2026";
 // Prix par zone
 function getPrixAbonnement(telephone) {
   const tel = telephone.replace("whatsapp:", "");
-  if (tel.startsWith("+224")) return { mensuel: "10 000 GNF", annuel: "100 000 GNF (2 mois offerts)", devise: "GNF" };
+  if (tel.startsWith("+224")) return {
+    mensuel: "10 000 GNF",
+    annuel: "100 000 GNF (2 mois offerts)",
+    devise: "GNF",
+    paiement: "Orange Money Guinée : +224 613 549 205"
+  };
   const zoneFCFA = ["+237","+221","+225","+223","+226","+228","+229","+227","+222"];
-  if (zoneFCFA.some(p => tel.startsWith(p))) return { mensuel: "2 000 FCFA", annuel: "20 000 FCFA (2 mois offerts)", devise: "FCFA" };
-  return { mensuel: "4.99 USD", annuel: "49.90 USD (2 mois offerts)", devise: "USD" };
+  if (zoneFCFA.some(p => tel.startsWith(p))) return {
+    mensuel: "2 000 FCFA",
+    annuel: "20 000 FCFA (2 mois offerts)",
+    devise: "FCFA",
+    paiement: "Orange Money Cameroun : +237 686 895 796"
+  };
+  return {
+    mensuel: "4.99 USD",
+    annuel: "49.90 USD (2 mois offerts)",
+    devise: "USD",
+    paiement: "Revolut : https://revolut.me/martin2dvf"
+  };
 }
 
 app.get("/admin", (req, res) => {
@@ -209,7 +224,8 @@ cron.schedule("0 9 * * *", async () => {
       const texte = message
         .replace("{JOURS}", jours)
         .replace("{MENSUEL}", prix.mensuel)
-        .replace("{ANNUEL}", prix.annuel);
+        .replace("{ANNUEL}", prix.annuel)
+        .replace("{PAIEMENT}", prix.paiement);
       try {
         await twilioClient.messages.create({ from: TWILIO_FROM, to: tel, body: texte });
         console.log("Rappel J-" + jours + " envoye a " + tel);
@@ -219,8 +235,8 @@ cron.schedule("0 9 * * *", async () => {
     }
   }
 
-  const msgRappel = "Votre periode d'essai Bilan Pro expire dans {JOURS} jour(s).\n\nPour continuer a gerer votre business sans interruption :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nContactez-nous sur www.bilanpro.app pour souscrire.";
-  const msgUrgent = "DERNIER JOUR ! Votre periode d'essai Bilan Pro expire aujourd'hui.\n\nVos donnees sont conservees. Pour continuer :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nSouscrivez sur www.bilanpro.app";
+  const msgRappel = "Votre periode d'essai Bilan Pro expire dans {JOURS} jour(s).\n\nPour continuer a gerer votre business sans interruption :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nEnvoyez votre recu sur www.bilanpro.app apres paiement.";
+  const msgUrgent = "DERNIER JOUR ! Votre periode d'essai Bilan Pro expire aujourd'hui.\n\nVos donnees sont conservees. Pour continuer :\n\nAbonnement mensuel : {MENSUEL}\nAbonnement annuel : {ANNUEL}\n\nPaiement : {PAIEMENT}\n\nSouscrivez sur www.bilanpro.app";
 
   await rappelDans(5, msgRappel);
   await rappelDans(3, msgRappel);
