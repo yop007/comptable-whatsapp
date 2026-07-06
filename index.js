@@ -15,6 +15,7 @@ const pendingPins = {};
 const pendingPinRecovery = {};
 const pendingNumberChange = {};
 const pendingTutorial = {};
+const pendingEmployeeJoin = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -98,7 +99,7 @@ async function extractTransaction(message) {
   }
 }
 
-async function saveTransaction(userId, extracted) {
+async function saveTransaction(userId, extracted, businessId, auteurNom) {
   if (extracted.client) {
     extracted.client = extracted.client.charAt(0).toUpperCase() + extracted.client.slice(1).toLowerCase();
   }
@@ -110,6 +111,8 @@ async function saveTransaction(userId, extracted) {
       montant: extracted.montant,
       description: extracted.description,
       client: extracted.client,
+      business_id: businessId || null,
+      auteur_nom: auteurNom || null,
     })
     .select();
 
@@ -117,7 +120,7 @@ async function saveTransaction(userId, extracted) {
   return data[0];
 }
 
-async function getBilan(userId, periode) {
+async function getBilan(userOrBusinessId, periode, isBusiness) {
   const from = new Date();
   if (periode === "mois") {
     from.setDate(1);
@@ -136,11 +139,9 @@ async function getBilan(userId, periode) {
   }
   from.setHours(0, 0, 0, 0);
 
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .eq("utilisateur_id", userId)
-    .gte("created_at", from.toISOString());
+  let query = supabase.from("transactions").select("*").gte("created_at", from.toISOString());
+  query = isBusiness ? query.eq("business_id", userOrBusinessId) : query.eq("utilisateur_id", userOrBusinessId);
+  const { data, error } = await query;
 
   if (error) throw error;
   const transactions = data || [];
@@ -158,12 +159,10 @@ async function getBilan(userId, periode) {
   };
 }
 
-async function getSoldeClient(userId, client) {
-  const { data, error } = await supabase
-    .from("transactions")
-    .select("*")
-    .eq("utilisateur_id", userId)
-    .ilike("client", "%" + client + "%");
+async function getSoldeClient(userOrBusinessId, client, isBusiness) {
+  let query = supabase.from("transactions").select("*").ilike("client", "%" + client + "%");
+  query = isBusiness ? query.eq("business_id", userOrBusinessId) : query.eq("utilisateur_id", userOrBusinessId);
+  const { data, error } = await query;
 
   if (error) throw error;
   const transactions = data || [];
@@ -398,6 +397,40 @@ export async function processMessage(telephone, message) {
     return "✅ Compte transfere avec succes !\n\nToutes vos transactions ont ete transferees vers ce nouveau numero.";
   }
 
+  if (pendingEmployeeJoin[telephone]) {
+    const prenom = message.trim();
+    if (!prenom) return "Prenom invalide. Quel est ton prenom ?";
+    await supabase.from("utilisateurs").update({ business_id: pendingEmployeeJoin[telephone].businessId, role: "employe", nom: prenom }).eq("id", user.id);
+    delete pendingEmployeeJoin[telephone];
+    return "Tu as rejoint le business avec succes, " + prenom + " !\n\nTes transactions (vt/dp/cr/rb) seront visibles par ton patron.\n\nTape 'aide' pour voir les commandes.";
+  }
+
+  const messageLower = message.trim().toLowerCase();
+
+  if (messageLower === "mon code") {
+    if (user.role === "employe") {
+      return "Tu es deja employe d'un business. Contacte ton patron si besoin.";
+    }
+    if (user.business_id) {
+      const { data: biz } = await supabase.from("business").select("code").eq("id", user.business_id).single();
+      return "Ton code business : " + biz.code + "\n\nPartage ce code a tes employes. Ils doivent taper exactement :\nrejoindre " + biz.code;
+    }
+    const code = "BP-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+    const { data: newBiz, error: bizError } = await supabase.from("business").insert({ code, patron_id: user.id }).select().single();
+    if (bizError) throw bizError;
+    await supabase.from("utilisateurs").update({ business_id: newBiz.id, role: "patron" }).eq("id", user.id);
+    return "Business cree !\n\nTon code : " + code + "\n\nPartage ce code a tes employes. Ils doivent taper exactement :\nrejoindre " + code + "\n\nToutes leurs transactions apparaitront dans ton bilan.";
+  }
+
+  if (messageLower.startsWith("rejoindre ") && messageLower !== "rejoindre communaute") {
+    const code = message.trim().split(/\s+/)[1]?.toUpperCase();
+    if (!code) return "Format invalide. Tape : rejoindre CODE";
+    const { data: biz } = await supabase.from("business").select("*").eq("code", code).single();
+    if (!biz) return "Code invalide. Verifie le code aupres de ton patron.";
+    pendingEmployeeJoin[telephone] = { businessId: biz.id };
+    return "Business trouve !\n\nQuel est ton prenom ? (pour que ton patron sache qui a fait quoi)";
+  }
+
   const extracted = await extractTransaction(message);
 
   // Restrictions apres expiration
@@ -417,13 +450,17 @@ export async function processMessage(telephone, message) {
     // Pas de restrictions specifiques pour le moment
   }
 
+  if (["bilan", "historique", "credits_liste", "annuler", "mon_abo"].includes(extracted.type) && user.role === "employe") {
+    return "Seul le patron peut consulter le bilan, l'historique ou les credits.\n\nTu peux enregistrer des transactions avec vt / dp / cr / rb.";
+  }
+
   if (extracted.type === "bilan") {
     if (extracted.client) {
-      const solde = await getSoldeClient(user.id, extracted.client);
+      const solde = await getSoldeClient(user.business_id || user.id, extracted.client, !!user.business_id);
       return "Solde de " + extracted.client + " :\n" + (solde > 0 ? "Doit encore : " + solde.toLocaleString() + " " + (extracted.devise || "") : "Aucune dette en cours.");
     }
 
-    const bilan = await getBilan(user.id, extracted.periode || "jour");
+    const bilan = await getBilan(user.business_id || user.id, extracted.periode || "jour", !!user.business_id);
     const devise = extracted.devise || "";
     const periodeLabel = {
       jour: "du jour",
@@ -440,12 +477,9 @@ export async function processMessage(telephone, message) {
   }
 
   if (extracted.type === "historique") {
-    const { data } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("utilisateur_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    let histQuery = supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(5);
+    histQuery = user.business_id ? histQuery.eq("business_id", user.business_id) : histQuery.eq("utilisateur_id", user.id);
+    const { data } = await histQuery;
 
     if (!data || data.length === 0) return "Aucune transaction enregistree.";
 
@@ -454,6 +488,7 @@ export async function processMessage(telephone, message) {
       (emojis[t.type] || "•") + " " + t.type.toUpperCase() + " " + t.montant?.toLocaleString() +
       (t.description ? " - " + t.description : "") +
       (t.client ? " (" + t.client + ")" : "") +
+      (t.auteur_nom ? " [" + t.auteur_nom + "]" : "") +
       " | " + new Date(t.created_at).toLocaleDateString("fr-FR")
     ).join("\n");
 
@@ -461,11 +496,9 @@ export async function processMessage(telephone, message) {
   }
 
   if (extracted.type === "credits_liste") {
-    const { data, error } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("utilisateur_id", user.id)
-      .in("type", ["credit", "remboursement"]);
+    let credQuery = supabase.from("transactions").select("*").in("type", ["credit", "remboursement"]);
+    credQuery = user.business_id ? credQuery.eq("business_id", user.business_id) : credQuery.eq("utilisateur_id", user.id);
+    const { data, error } = await credQuery;
 
     if (error) throw error;
     const transactions = (data || []).filter(t => t.client !== null);
@@ -645,13 +678,15 @@ export async function processMessage(telephone, message) {
       "AUTRES :\n" +
       "annuler        = Annuler une operation\n" +
       "mon abo        = Voir mon abonnement\n" +
+      "mon code       = Creer/voir ton code business (equipe)\n" +
+      "rejoindre CODE = Rejoindre le business d'un patron\n" +
       "pin oublie     = Recuperer ton PIN\n" +
       "changer numero = Transferer ton compte\n" +
       "communaute     = Rejoindre la communaute WhatsApp\n" +
       "aide           = Afficher ce menu";
   }
 
-  await saveTransaction(user.id, extracted);
+  await saveTransaction(user.id, extracted, user.business_id, user.nom);
   const deviseAffichee = extracted.devise ? " " + extracted.devise : "";
   return ("✅ Enregistre : " + extracted.type + " de " + extracted.montant?.toLocaleString() + deviseAffichee + (extracted.description ? " - " + extracted.description : "") + (extracted.client ? " (client: " + extracted.client + ")" : "")).trim();
 }
