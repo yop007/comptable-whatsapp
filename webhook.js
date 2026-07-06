@@ -56,6 +56,14 @@ function getPrixAbonnement(telephone) {
   };
 }
 
+function getPrixNumerique(telephone) {
+  const tel = telephone.replace("whatsapp:", "");
+  if (tel.startsWith("+224")) return { montant: 10000, devise: "GNF" };
+  const zoneFCFA = ["+237","+221","+225","+223","+226","+228","+229","+227","+222"];
+  if (zoneFCFA.some(p => tel.startsWith(p))) return { montant: 2000, devise: "FCFA" };
+  return { montant: 4.99, devise: "USD" };
+}
+
 app.get("/admin", (req, res) => {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Basic ")) {
@@ -549,11 +557,36 @@ app.get("/admin/partenaires", async (req, res) => {
     .order("created_at", { ascending: false });
 
   const partenaires = await Promise.all((data || []).map(async p => {
-    const { count } = await supabase
+    const { data: users } = await supabase
       .from("utilisateurs")
-      .select("*", { count: "exact", head: true })
+      .select("id, telephone")
       .eq("partenaire_code", p.code);
-    return { ...p, inscrits: count || 0 };
+
+    const inscrits = (users || []).length;
+    let commissionParDevise = {};
+
+    if (users && users.length > 0) {
+      const ids = users.map(u => u.id);
+      const { data: abosPro } = await supabase
+        .from("abonnements")
+        .select("utilisateur_id")
+        .in("utilisateur_id", ids)
+        .eq("tier", "pro")
+        .eq("actif", true);
+
+      const idsProSet = new Set((abosPro || []).map(a => a.utilisateur_id));
+      for (const u of users) {
+        if (!idsProSet.has(u.id)) continue;
+        const prix = getPrixNumerique(u.telephone);
+        commissionParDevise[prix.devise] = (commissionParDevise[prix.devise] || 0) + prix.montant * 0.30;
+      }
+    }
+
+    const commission = Object.entries(commissionParDevise)
+      .map(([devise, montant]) => montant.toLocaleString() + " " + devise)
+      .join(" + ") || "0";
+
+    return { ...p, inscrits, commission };
   }));
 
   res.json(partenaires);

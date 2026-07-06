@@ -100,12 +100,13 @@
           <th>Type</th>
           <th>Code</th>
           <th>Inscrits</th>
+          <th>Commission due</th>
           <th>Statut</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody id="partenaire-tbody">
-        <tr><td colspan="7" class="loading">Chargement...</td></tr>
+        <tr><td colspan="8" class="loading">Chargement...</td></tr>
       </tbody>
     </table>
   </div>
@@ -595,7 +596,7 @@ function download(filename, content, type) {
         const data = await res.json();
         document.getElementById('partenaire-count').textContent = data.length + ' partenaire(s)';
         if (!data.length) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">Aucun partenaire</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888;">Aucun partenaire</td></tr>';
           return;
         }
         tbody.innerHTML = data.map(p => {
@@ -611,6 +612,7 @@ function download(filename, content, type) {
             <td>${typeBadge}</td>
             <td><strong>${p.code}</strong></td>
             <td>${p.inscrits || 0}</td>
+            <td>${p.commission || '0'}</td>
             <td>${statutBadge}</td>
             <td>
               <button onclick="togglePartenaire('${p.id}', ${p.actif})" style="padding:5px 12px;background:${p.actif ? '#e74c3c' : '#085041'};color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;">${p.actif ? 'Désactiver' : 'Activer'}</button>
