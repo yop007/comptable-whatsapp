@@ -377,6 +377,7 @@ export async function processMessage(telephone, message, media) {
     }
     try {
       const transcript = await transcribeAudio(media.url, media.contentType);
+      console.log("Transcription vocale (" + telephone + ") : " + transcript);
       if (!transcript || !transcript.trim()) {
         return "Je n'ai pas compris ta note vocale.\n\nEssaie de reparler plus clairement dans un endroit calme, ou tape ton message.";
       }
