@@ -165,6 +165,7 @@ async function transcribeAudio(mediaUrl, contentType) {
     file,
     model: "whisper-1",
     language: "fr",
+    prompt: "Vocabulaire courant : vente, depense, achat, credit, remboursement, riz, poisson, viande, macabo, manioc, plantain, huile, essence, transport, taxi. Noms propres frequents : John, Mamadou, Fatou, Ibrahim, Aisha, Ousmane, Aminata.",
   });
 
   return transcription.text;
