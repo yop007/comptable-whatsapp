@@ -195,9 +195,11 @@ app.post("/webhook", async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
   const message = req.body.Body;
   const telephone = req.body.From;
+  const numMedia = parseInt(req.body.NumMedia || "0");
+  const media = numMedia > 0 ? { url: req.body.MediaUrl0, contentType: req.body.MediaContentType0 } : null;
 
   try {
-    const reponse = await processMessage(telephone, message);
+    const reponse = await processMessage(telephone, message, media);
     twiml.message(reponse);
   } catch (err) {
     console.error(err);

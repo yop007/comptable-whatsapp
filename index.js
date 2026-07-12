@@ -16,6 +16,7 @@ const pendingPinRecovery = {};
 const pendingNumberChange = {};
 const pendingTutorial = {};
 const pendingEmployeeJoin = {};
+const pendingImageImport = {};
 
 const SYSTEM_PROMPT = `Tu es un assistant comptable pour des commercants.
 Extrait les informations du message et retourne UNIQUEMENT un JSON valide.
@@ -97,6 +98,58 @@ async function extractTransaction(message) {
   } catch {
     throw new Error("Reponse OpenAI invalide (JSON malforme) : " + raw);
   }
+}
+
+const VISION_SYSTEM_PROMPT = `Tu es un assistant comptable. Tu recois une photo d'un cahier de comptes manuscrit ou d'une liste de transactions ecrites a la main ou imprimees.
+Extrait CHAQUE ligne de transaction que tu peux lire clairement.
+
+Pour chaque transaction, determine :
+- type : "vente" (argent recu/encaisse), "depense" (argent depense), "credit" (vente a credit, le client doit de l argent), "remboursement" (client qui rembourse une dette existante)
+- montant : nombre uniquement, sans texte ni devise
+- description : bref texte decrivant l article/service si visible, sinon null
+- client : nom du client si visible (surtout pour credit/remboursement), sinon null
+
+Ignore les lignes illisibles, barrees ou ambigues plutot que de deviner au hasard.
+Si aucune transaction n est identifiable avec certitude, retourne un tableau vide.
+
+Retourne UNIQUEMENT ce JSON, sans aucun texte avant ou apres :
+{
+  "transactions": [
+    { "type": "vente" | "depense" | "credit" | "remboursement", "montant": number, "description": string | null, "client": string | null }
+  ]
+}`;
+
+async function extractTransactionsFromImage(mediaUrl, contentType) {
+  const authHeader = "Basic " + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ":" + process.env.TWILIO_AUTH_TOKEN).toString("base64");
+  const imgResponse = await fetch(mediaUrl, { headers: { Authorization: authHeader } });
+  if (!imgResponse.ok) throw new Error("Impossible de telecharger l'image (" + imgResponse.status + ")");
+  const arrayBuffer = await imgResponse.arrayBuffer();
+  const base64 = Buffer.from(arrayBuffer).toString("base64");
+  const dataUrl = "data:" + contentType + ";base64," + base64;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: VISION_SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Extrait toutes les transactions visibles sur cette photo de cahier de comptes." },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ],
+      },
+    ],
+    temperature: 0,
+  });
+
+  const raw = response.choices[0].message.content;
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Reponse OpenAI invalide (JSON malforme) : " + raw);
+  }
+  return Array.isArray(parsed.transactions) ? parsed.transactions : [];
 }
 
 async function saveTransaction(userId, extracted, businessId, auteurNom) {
@@ -194,7 +247,7 @@ async function getTier(userId) {
   return data.tier || "expire";
 }
 
-export async function processMessage(telephone, message) {
+export async function processMessage(telephone, message, media) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
   if (isNew) {
@@ -297,6 +350,30 @@ export async function processMessage(telephone, message) {
   }
 
   const tier = await getTier(user.id);
+
+  // Import photo cahier de comptes
+  if (media && media.contentType && media.contentType.startsWith("image/") && !pendingPins[telephone] && !pendingTutorial[telephone]) {
+    if (tier === "expire") {
+      const prix = getPrixAbonnement(telephone);
+      return "⚠️ Ta periode d'essai est terminee.\n\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nSouscris sur www.bilanpro.app";
+    }
+    try {
+      const items = await extractTransactionsFromImage(media.url, media.contentType);
+      if (!items || items.length === 0) {
+        return "Je n'ai trouve aucune transaction lisible sur cette photo.\n\nEssaie avec une photo plus nette et bien eclairee, ou enregistre tes transactions une par une (vt/dp/cr/rb).";
+      }
+      pendingImageImport[telephone] = { transactions: items };
+      const liste = items.map((t, i) =>
+        (i + 1) + ". " + (t.type || "?").toUpperCase() + " " + (t.montant?.toLocaleString() || "?") +
+        (t.description ? " - " + t.description : "") +
+        (t.client ? " (" + t.client + ")" : "")
+      ).join("\n");
+      return "J'ai trouve " + items.length + " transaction(s) sur ta photo :\n\n" + liste + "\n\nTu confirmes l'enregistrement ? Reponds OUI ou NON.";
+    } catch (err) {
+      console.error("Erreur extraction image:", err);
+      return "Je n'ai pas reussi a analyser cette photo. Reessaie avec une photo plus nette, ou enregistre tes transactions une par une.";
+    }
+  }
 
   // Gestion choix annulation en attente
   if (pendingCancellations[user.telephone]?.step === "choix") {
@@ -403,6 +480,23 @@ export async function processMessage(telephone, message) {
     await supabase.from("utilisateurs").update({ business_id: pendingEmployeeJoin[telephone].businessId, role: "employe", nom: prenom }).eq("id", user.id);
     delete pendingEmployeeJoin[telephone];
     return "Tu as rejoint le business avec succes, " + prenom + " !\n\nTes transactions (vt/dp/cr/rb) seront visibles par ton patron.\n\nTape 'aide' pour voir les commandes.";
+  }
+
+  if (pendingImageImport[telephone]) {
+    const reponse = message.trim().toLowerCase();
+    if (reponse === "oui" || reponse === "yes") {
+      const items = pendingImageImport[telephone].transactions;
+      for (const item of items) {
+        await saveTransaction(user.id, item, user.business_id, user.nom);
+      }
+      delete pendingImageImport[telephone];
+      return "✅ " + items.length + " transaction(s) enregistree(s) avec succes !";
+    }
+    if (reponse === "non" || reponse === "no") {
+      delete pendingImageImport[telephone];
+      return "Import annule. Aucune transaction enregistree.";
+    }
+    return "Reponds OUI pour confirmer l'enregistrement de ces transactions, ou NON pour annuler.";
   }
 
   const messageLower = message.trim().toLowerCase();
@@ -666,7 +760,8 @@ export async function processMessage(telephone, message) {
       "dp = Depense\n" +
       "cr = Credit client (argent a recevoir)\n" +
       "rb = Remboursement (client qui paie sa dette)\n" +
-      "   vt si encaisse direct, cr si paie plus tard\n\n" +
+      "   vt si encaisse direct, cr si paie plus tard\n" +
+      "📷 Envoie une photo de ton cahier de comptes pour enregistrer plusieurs transactions d'un coup\n\n" +
       "CONSULTER :\n" +
       "blj = Bilan du jour\n" +
       "blm = Bilan du mois\n" +
