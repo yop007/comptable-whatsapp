@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import { createClient } from "@supabase/supabase-js";
 import ws from "ws";
 
@@ -150,6 +150,24 @@ async function extractTransactionsFromImage(mediaUrl, contentType) {
     throw new Error("Reponse OpenAI invalide (JSON malforme) : " + raw);
   }
   return Array.isArray(parsed.transactions) ? parsed.transactions : [];
+}
+
+async function transcribeAudio(mediaUrl, contentType) {
+  const authHeader = "Basic " + Buffer.from(process.env.TWILIO_ACCOUNT_SID + ":" + process.env.TWILIO_AUTH_TOKEN).toString("base64");
+  const audioResponse = await fetch(mediaUrl, { headers: { Authorization: authHeader } });
+  if (!audioResponse.ok) throw new Error("Impossible de telecharger l'audio (" + audioResponse.status + ")");
+  const arrayBuffer = await audioResponse.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const ext = contentType.includes("ogg") ? "ogg" : contentType.includes("mpeg") ? "mp3" : "audio";
+  const file = await toFile(buffer, "voice." + ext, { type: contentType });
+
+  const transcription = await openai.audio.transcriptions.create({
+    file,
+    model: "whisper-1",
+    language: "fr",
+  });
+
+  return transcription.text;
 }
 
 async function saveTransaction(userId, extracted, businessId, auteurNom) {
@@ -350,6 +368,25 @@ export async function processMessage(telephone, message, media) {
   }
 
   const tier = await getTier(user.id);
+
+  // Note vocale
+  if (media && media.contentType && media.contentType.startsWith("audio/") && !pendingPins[telephone] && !pendingTutorial[telephone]) {
+    if (tier === "expire") {
+      const prix = getPrixAbonnement(telephone);
+      return "⚠️ Ta periode d'essai est terminee.\n\nAbonnement mensuel : " + prix.mensuel + "\nAbonnement annuel : " + prix.annuel + "\n\nSouscris sur www.bilanpro.app";
+    }
+    try {
+      const transcript = await transcribeAudio(media.url, media.contentType);
+      if (!transcript || !transcript.trim()) {
+        return "Je n'ai pas compris ta note vocale.\n\nEssaie de reparler plus clairement dans un endroit calme, ou tape ton message.";
+      }
+      const reponse = await processMessage(telephone, transcript, null);
+      return "🎤 J'ai compris : \"" + transcript.trim() + "\"\n\n" + reponse;
+    } catch (err) {
+      console.error("Erreur transcription audio:", err);
+      return "Je n'ai pas reussi a transcrire ta note vocale. Reessaie ou tape ton message.";
+    }
+  }
 
   // Import photo cahier de comptes
   if (media && media.contentType && media.contentType.startsWith("image/") && !pendingPins[telephone] && !pendingTutorial[telephone]) {
@@ -761,7 +798,8 @@ export async function processMessage(telephone, message, media) {
       "cr = Credit client (argent a recevoir)\n" +
       "rb = Remboursement (client qui paie sa dette)\n" +
       "   vt si encaisse direct, cr si paie plus tard\n" +
-      "📷 Envoie une photo de ton cahier de comptes pour enregistrer plusieurs transactions d'un coup\n\n" +
+      "📷 Envoie une photo de ton cahier de comptes pour enregistrer plusieurs transactions d'un coup\n" +
+      "🎤 Envoie une note vocale pour enregistrer une transaction en parlant\n\n" +
       "CONSULTER :\n" +
       "blj = Bilan du jour\n" +
       "blm = Bilan du mois\n" +
