@@ -170,6 +170,49 @@ async function transcribeAudio(mediaUrl, contentType) {
   return transcription.text;
 }
 
+const TEXT_MULTI_SYSTEM_PROMPT = `Tu es un assistant comptable. Tu recois un texte (transcrit depuis un message vocal WhatsApp) qui peut contenir UNE ou PLUSIEURS transactions enoncees a la suite.
+
+Pour chaque transaction mentionnee, determine :
+- type : "vente" (argent recu/encaisse), "depense" (argent depense/achat), "credit" (vente a credit, le client doit de l argent), "remboursement" (client qui rembourse une dette existante)
+- montant : nombre uniquement, sans texte ni devise
+- description : bref texte decrivant l article/service si mentionne, sinon null
+- client : nom du client si mentionne (surtout pour credit/remboursement), sinon null
+
+Regles :
+- "vente [article], [montant]" ou "vendu [article] a [montant]" = vente
+- "achat [article], [montant]" ou "achete [article] a [montant]" ou "depense [article]" = depense
+- "credit [nom], [montant]" ou "[nom] a pris [montant] a credit" = credit
+- "remboursement [nom], [montant]" ou "[nom] a rembourse [montant]" = remboursement
+- Chaque phrase separee par un point ou "et" peut etre une transaction distincte, extrait-les toutes.
+- Si le texte est une commande ou une question (ex: "bilan", "quel est mon bilan", "aide", "historique", "annuler", "qui me doit") et NE decrit PAS une transaction a enregistrer, retourne un tableau vide.
+- Si aucune transaction claire n est identifiable, retourne un tableau vide plutot que de deviner.
+
+Retourne UNIQUEMENT ce JSON, sans aucun texte avant ou apres :
+{
+  "transactions": [
+    { "type": "vente" | "depense" | "credit" | "remboursement", "montant": number, "description": string | null, "client": string | null }
+  ]
+}`;
+
+async function extractTransactionsFromText(text) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: TEXT_MULTI_SYSTEM_PROMPT },
+      { role: "user", content: text },
+    ],
+    temperature: 0,
+  });
+  const raw = response.choices[0].message.content;
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("Reponse OpenAI invalide (JSON malforme) : " + raw);
+  }
+  return Array.isArray(parsed.transactions) ? parsed.transactions : [];
+}
+
 async function saveTransaction(userId, extracted, businessId, auteurNom) {
   if (extracted.client) {
     extracted.client = extracted.client.charAt(0).toUpperCase() + extracted.client.slice(1).toLowerCase();
@@ -381,8 +424,28 @@ export async function processMessage(telephone, message, media) {
       if (!transcript || !transcript.trim()) {
         return "Je n'ai pas compris ta note vocale.\n\nEssaie de reparler plus clairement dans un endroit calme, ou tape ton message.";
       }
-      const reponse = await processMessage(telephone, transcript, null);
-      return "🎤 J'ai compris : \"" + transcript.trim() + "\"\n\n" + reponse;
+
+      const items = await extractTransactionsFromText(transcript);
+
+      if (!items || items.length === 0) {
+        const reponse = await processMessage(telephone, transcript, null);
+        return "🎤 J'ai compris : \"" + transcript.trim() + "\"\n\n" + reponse;
+      }
+
+      if (items.length === 1) {
+        const t = items[0];
+        await saveTransaction(user.id, t, user.business_id, user.nom);
+        const deviseAffichee = t.devise ? " " + t.devise : "";
+        return "🎤 J'ai compris : \"" + transcript.trim() + "\"\n\n✅ Enregistre : " + t.type + " de " + t.montant?.toLocaleString() + deviseAffichee + (t.description ? " - " + t.description : "") + (t.client ? " (client: " + t.client + ")" : "");
+      }
+
+      pendingImageImport[telephone] = { transactions: items };
+      const liste = items.map((t, i) =>
+        (i + 1) + ". " + (t.type || "?").toUpperCase() + " " + (t.montant?.toLocaleString() || "?") +
+        (t.description ? " - " + t.description : "") +
+        (t.client ? " (" + t.client + ")" : "")
+      ).join("\n");
+      return "🎤 J'ai compris : \"" + transcript.trim() + "\"\n\nJ'ai trouve " + items.length + " transaction(s) :\n\n" + liste + "\n\nTu confirmes l'enregistrement ? Reponds OUI ou NON.";
     } catch (err) {
       console.error("Erreur transcription audio:", err);
       return "Je n'ai pas reussi a transcrire ta note vocale. Reessaie ou tape ton message.";
