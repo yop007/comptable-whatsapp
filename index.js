@@ -50,10 +50,11 @@ Regles importantes :
 - "mon abo", "mon abonnement", "statut abo", "quand expire" = mon_abo
 - "communaute", "groupe", "rejoindre communaute", "whatsapp group" = communaute
 - "pin oublie", "oublie pin", "recuperer pin", "mot de passe oublie" = pin_oublie
+- "c'est quoi bilan pro", "comment ca marche", "combien ca coute", "c'est gratuit", "comment devenir ambassadeur", "comment ca fonctionne", "qu'est ce que c'est", "a quoi ca sert", toute question generale sur le produit qui n'est PAS une commande de la liste ci-dessus = question
 
 Retourne ce JSON :
 {
-  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "mon_abo" | "supprimer_compte" | "inconnu",
+  "type": "vente" | "depense" | "credit" | "remboursement" | "bilan" | "credits_liste" | "historique" | "aide" | "annuler" | "confirmer" | "refuser" | "pin_oublie" | "changer_numero" | "partenaire" | "communaute" | "mon_abo" | "supprimer_compte" | "question" | "inconnu",
   "montant": number | null,
   "devise": string | null,
   "description": string | null,
@@ -296,6 +297,41 @@ function getPrixAbonnement(telephone) {
   return { mensuel: "4.99 USD", annuel: "49.90 USD (2 mois offerts)", paiement: "Revolut : https://revolut.me/martin2dvf" };
 }
 
+function buildQuestionSystemPrompt(telephone) {
+  const prix = getPrixAbonnement(telephone);
+  return `Tu es l'assistant Bilan Pro sur WhatsApp. Un prospect ou utilisateur pose une question generale sur Bilan Pro (pas une commande comptable).
+Reponds UNIQUEMENT en te basant sur les faits ci-dessous. N'invente RIEN d'autre (pas de fonctionnalite, pas de prix, pas de promesse non listee).
+
+FAITS VERIFIES SUR BILAN PRO :
+- Bilan Pro est un assistant comptable IA utilisable directement sur WhatsApp, sans app a telecharger.
+- Fonctionnalites : enregistrer ventes (vt), depenses (dp), credits clients (cr), remboursements (rb), voir son bilan (jour/mois/trimestre/semestre/annee), historique des transactions, liste des credits en cours.
+- On peut aussi enregistrer en envoyant une photo de son cahier de comptes papier, ou une note vocale, en plus du texte.
+- Essai gratuit : 30 jours, sans carte bancaire.
+- Apres l'essai : abonnement mensuel ${prix.mensuel}, abonnement annuel ${prix.annuel}. Paiement via ${prix.paiement}. Apres paiement, envoyer le recu a support@bilanpro.app.
+- Programme ambassadeur/partenaire : possibilite de recommander Bilan Pro et toucher 30% de commission sur chaque abonne Pro ramene. Pour lier un code recu, taper "partenaire CODE".
+- Gestion d'equipe : un patron peut taper "mon code" pour creer un business et inviter des employes avec "rejoindre CODE".
+- Communaute WhatsApp disponible via la commande "communaute".
+- Pour commencer, il suffit d'envoyer n'importe quel message a ce numero WhatsApp.
+- Support : support@bilanpro.app
+
+Regles :
+- Reponds en francais, de facon courte et naturelle (style WhatsApp, pas de gros paves).
+- Si la question porte sur un sujet non couvert par ces faits, dis que tu ne sais pas avec certitude et invite a contacter support@bilanpro.app ou la communaute WhatsApp plutot que d'inventer une reponse.
+- Ne donne jamais de prix ou de promesse qui ne figure pas dans les faits ci-dessus.`;
+}
+
+async function answerGeneralQuestion(message, telephone) {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: buildQuestionSystemPrompt(telephone) },
+      { role: "user", content: message },
+    ],
+    temperature: 0.3,
+  });
+  return response.choices[0].message.content.trim();
+}
+
 async function getTier(userId) {
   const { data } = await supabase
     .from("abonnements")
@@ -313,6 +349,11 @@ export async function processMessage(telephone, message, media) {
   const { user, isNew } = await getOrCreateUser(telephone);
 
   if (isNew) {
+    const classification = await extractTransaction(message);
+    if (classification.type === "question") {
+      const answer = await answerGeneralQuestion(message, telephone);
+      return answer + "\n\n💬 Pour commencer ton essai gratuit de 30 jours, envoie n'importe quel autre message.";
+    }
     pendingPins[telephone] = { step: "create" };
     return "Bienvenue sur Bilan Pro !\n\nPour securiser ton compte, cree un code PIN a 4 chiffres.\nCe code te permettra de recuperer ton compte si tu changes de numero.\n\nEnvoie ton PIN a 4 chiffres :";
   }
@@ -648,6 +689,11 @@ export async function processMessage(telephone, message, media) {
 
   if (["bilan", "historique", "credits_liste", "annuler", "mon_abo"].includes(extracted.type) && user.role === "employe") {
     return "Seul le patron peut consulter le bilan, l'historique ou les credits.\n\nTu peux enregistrer des transactions avec vt / dp / cr / rb.";
+  }
+
+  if (extracted.type === "question") {
+    const answer = await answerGeneralQuestion(message, telephone);
+    return answer;
   }
 
   if (extracted.type === "bilan") {
